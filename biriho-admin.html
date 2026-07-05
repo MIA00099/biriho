@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c1424">
+<meta name="robots" content="noindex, nofollow">
+<title>Biriho Shop | Admin</title>
+<link rel="stylesheet" href="assets/admin.css">
+
+</head>
+<body>
+
+<!-- ============ CONFIG NOTICE (shown if Supabase isn't set up yet) ============ -->
+<div id="configScreen" class="hidden">
+  <div class="config-card">
+    <div class="lock" style="width:56px;height:56px;border-radius:16px;background:#fdeceb;display:grid;place-items:center;font-size:1.6rem;margin-bottom:16px">⚠️</div>
+    <h1>Supabase isn't connected yet</h1>
+    <p>This dashboard needs a Supabase project so your catalog is stored online and shared by every visitor. Open this file and fill in the two placeholders near the top of the <code>&lt;script&gt;</code> section:</p>
+    <p><code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code></p>
+    <p>You'll find both in your Supabase project under <strong>Project Settings → API</strong>. Then run the provided <code>supabase-setup.sql</code> once in the SQL Editor to create the tables.</p>
+  </div>
+</div>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen" class="hidden">
+  <div class="login-card">
+    <div class="lock">🔒</div>
+    <h1>Biriho Shop Admin</h1>
+    <p>Sign in to manage the product catalog.</p>
+    <div class="login-error" id="loginError">Incorrect password. Please try again.</div>
+    <form id="loginForm">
+      <div class="field">
+        <label for="passwordInput">Admin password</label>
+        <input type="password" id="passwordInput" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-blue btn-block">Sign in</button>
+    </form>
+    <div class="login-hint">This page is not linked from the public site. Keep its address private.</div>
+  </div>
+</div>
+
+<!-- ============ ADMIN APP ============ -->
+<div id="adminApp" class="hidden">
+  <header class="admin-header">
+    <div class="container">
+      <div class="brand">Biriho <em>Shop</em> <span class="brand-badge">Admin</span></div>
+      <div class="header-right">
+        <span class="conn-status" id="connStatus"><span class="conn-dot" id="connDot"></span><span class="txt" id="connText">Connecting…</span></span>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div class="container">
+      <div class="page-head">
+        <div>
+          <h2>Catalog manager</h2>
+          <p>Changes save straight to your Supabase database, so every visitor to the live site sees them immediately.</p>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="products">Products</button>
+        <button class="tab-btn" data-tab="departments">Departments</button>
+      </div>
+
+      <!-- ---------------- PRODUCTS TAB ---------------- -->
+      <div class="tab-panel active" id="tab-products">
+        <div class="stats-row">
+          <div class="stat-card"><div class="num" id="statTotal">0</div><div class="label">Total products</div></div>
+          <div class="stat-card"><div class="num" id="statDepts">0</div><div class="label">Departments</div></div>
+          <div class="stat-card"><div class="num" id="statTvs">0</div><div class="label">Products with sizes</div></div>
+          <div class="stat-card"><div class="num" id="statFiltered">0</div><div class="label">Matching current filter</div></div>
+        </div>
+
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search products…">
+            <select id="deptFilter" class="dept-select"></select>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-blue" id="addProductBtn">+ Add product</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="p-row head">
+            <div></div>
+            <div>Product</div>
+            <div>Department</div>
+            <div>Specs</div>
+            <div style="text-align:right">Actions</div>
+          </div>
+          <div id="productList"><div class="empty-row">Loading…</div></div>
+        </div>
+      </div>
+
+      <!-- ---------------- DEPARTMENTS TAB ---------------- -->
+      <div class="tab-panel" id="tab-departments">
+        <div class="toolbar">
+          <div class="toolbar-left"><p style="margin:0;color:var(--muted);font-size:.85rem">Departments group your products and power the category filter chips on the storefront.</p></div>
+          <div class="toolbar-right">
+            <button class="btn btn-blue" id="addDeptBtn">+ Add department</button>
+          </div>
+        </div>
+        <div class="dept-grid" id="deptGrid"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ PRODUCT MODAL ============ -->
+<div id="modalBackdrop" class="modal-backdrop hidden">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <div class="modal-header-copy">
+        <h3 id="modalTitle">Add product</h3>
+        <p class="sub">Add the main information, choose an image, then save.</p>
+      </div>
+      <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Close product form">×</button>
+    </div>
+    <form id="productForm">
+      <div class="modal-body">
+        <div class="grid-2">
+          <div class="field">
+            <label for="fName">Product name *</label>
+            <input type="text" id="fName" required placeholder="e.g. Washing machine">
+          </div>
+          <div class="field">
+            <div class="department-field-head">
+              <label for="fDept">Department *</label>
+              <div class="department-tools" aria-label="Department actions">
+                <button type="button" class="dept-inline-btn" id="quickAddDeptBtn">+ Add department</button>
+                <button type="button" class="dept-inline-btn" id="quickEditDeptBtn">Edit selected</button>
+              </div>
+            </div>
+            <select id="fDept" required></select>
+            <div class="help">Add or edit a department here without closing the product form.</div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="fBrand">Brand <span style="font-weight:700;color:var(--muted)">(optional)</span></label>
+            <input type="text" id="fBrand" placeholder="e.g. Hisense">
+          </div>
+          <div class="field">
+            <label for="fSizes">Sizes <span style="font-weight:700;color:var(--muted)">(optional)</span></label>
+            <input type="text" id="fSizes" placeholder="e.g. 32″, 43″, 55″">
+            <div class="help">Separate several sizes with commas.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="section-label">
+            <label for="fImage">Product image *</label>
+            <span class="required-note">Choose one method</span>
+          </div>
+          <div class="image-upload-card">
+            <div class="image-method">
+              <div class="image-method-box">
+                <div class="image-method-title"><span class="method-number">1</span> Paste an image link</div>
+                <input type="url" id="fImage" required placeholder="https://example.com/product.jpg" inputmode="url">
+              </div>
+              <div class="image-method-box">
+                <div class="image-method-title"><span class="method-number">2</span> Upload from your device</div>
+                <div class="upload-row">
+                  <label class="file-picker" for="fImageFile">
+                    <input type="file" id="fImageFile" accept="image/*">
+                    <span class="file-picker-copy"><span class="file-picker-icon">🖼️</span><span class="file-name" id="fileNameText">Choose image</span></span>
+                  </label>
+                  <button type="button" class="btn btn-ghost btn-sm" id="uploadBtn">Upload</button>
+                </div>
+                <div class="upload-status" id="uploadStatus">PNG, JPG or WEBP recommended.</div>
+              </div>
+            </div>
+            <div class="preview-box">
+              <span class="preview-badge">Image preview</span>
+              <img id="previewImg" alt="Selected product preview">
+              <div class="preview-empty" id="previewEmpty">
+                <div class="preview-empty-icon">📷</div>
+                <strong>Your product image will appear here</strong>
+                <span>Paste a link or choose a file above.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field specs-builder">
+          <div class="section-label">
+            <label for="fSpecs">Product specifications *</label>
+            <span class="required-note">Use commas</span>
+          </div>
+          <textarea id="fSpecs" required placeholder="e.g. Top load, 10 kg capacity, 8 wash programs"></textarea>
+          <div class="help">Each item becomes a small information tag on the product card.</div>
+          <div class="specs-preview" id="specsPreview"><span class="empty-spec">Your specification tags will appear here</span></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelModalBtn">Cancel</button>
+        <button type="submit" class="btn btn-blue" id="saveProductBtn">Save product</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ DEPARTMENT MODAL ============ -->
+<div id="deptModalBackdrop" class="modal-backdrop hidden">
+  <div class="modal narrow" role="dialog" aria-modal="true" aria-labelledby="deptModalTitle">
+    <div class="modal-header">
+      <div class="modal-header-copy">
+        <h3 id="deptModalTitle">Add department</h3>
+        <p class="sub" id="deptModalSub">Create a category that customers can use to find products.</p>
+      </div>
+      <button type="button" class="modal-close" id="deptModalCloseBtn" aria-label="Close department form">×</button>
+    </div>
+    <form id="deptForm">
+      <div class="modal-body">
+        <div class="field">
+          <label for="dName">Department name *</label>
+          <input type="text" id="dName" required placeholder="e.g. Laundry" autocomplete="off">
+          <div class="help">This name appears in the shop category filters.</div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="dIcon">Icon (emoji)</label>
+            <input type="text" id="dIcon" placeholder="🧺" maxlength="8">
+          </div>
+          <div class="field">
+            <label for="dOrder">Display order</label>
+            <input type="number" id="dOrder" min="1" step="1" inputmode="numeric">
+          </div>
+        </div>
+        <div class="department-impact" id="deptImpactNote">
+          <strong>Safe to use:</strong> adding a department does not change any existing products.
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelDeptModalBtn">Cancel</button>
+        <button type="submit" class="btn btn-blue" id="saveDeptBtn">Save department</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/admin.js"></script>
+</body>
+</html>
