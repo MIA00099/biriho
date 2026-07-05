@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c1424">
+<meta name="description" content="Responsive electronics and home-appliance showroom with direct WhatsApp ordering.">
+<title>Biriho Shop | Electronics & Appliances</title>
+<link rel="stylesheet" href="assets/shop.css">
+
+</head>
+<body>
+<div class="announcement"><strong>Biriho Shop</strong> — order directly on WhatsApp: +250 788 200 521</div>
+<header class="header">
+  <div class="container nav">
+    <a href="#home" class="brand" aria-label="Biriho Shop home"><img src="assets/biriho-logo.svg" alt="Biriho Shop logo" class="brand-logo"></a>
+    <form class="search" id="searchForm">
+      <input id="searchInput" type="search" placeholder="Search product or category..." aria-label="Search products">
+      <button type="submit">Search</button>
+    </form>
+    <a class="header-wa" id="headerWhatsapp" href="#" target="_blank" rel="noopener">WhatsApp us</a>
+  </div>
+</header>
+<main id="home">
+  <section class="catalog" id="catalog">
+    <div class="container">
+      <div class="section-head">
+        <div><h2>Shop products</h2></div>
+        <div class="result-count" id="resultCount"></div>
+      </div>
+      <div class="controls" id="categories" aria-labelledby="categoryTitle">
+        <div class="category-panel-head">
+          <p class="category-kicker">Find products faster</p>
+          <h3 id="categoryTitle">Browse categories</h3>
+          <p>Tap a category below to show only those products.</p>
+        </div>
+        <div class="department-select-wrap">
+          <label for="departmentSelect">Product department</label>
+          <select id="departmentSelect" aria-label="Choose a product department"></select>
+        </div>
+        <div class="department-row" id="departmentRow" role="group" aria-label="Product categories"></div>
+      </div>
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="container cta-box">
+      <div class="cta-copy"><h2>Need a specific model?</h2><p>Send the brand, size or specifications you need. The seller can confirm the available options, warranty and delivery.</p><a class="btn btn-wa" id="ctaWhatsapp" href="#" target="_blank" rel="noopener" style="margin-top:24px">Send a WhatsApp request</a></div>
+      <div class="cta-photo"><img src="https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=900&q=82" alt="Electronics store"></div>
+    </div>
+  </section>
+</main>
+<footer id="about">
+  <div class="container">
+    <div class="footer-top"><div><strong>Biriho Shop</strong><div>Electronics and home appliances sold through direct conversation. WhatsApp: +250 788 200 521</div></div><a class="btn btn-wa" id="footerWhatsapp" href="#" target="_blank" rel="noopener">Contact on WhatsApp</a></div>
+    <div class="footer-bottom">© 2026 Biriho Shop · WhatsApp: +250 788 200 521</div>
+  </div>
+</footer>
+<a class="floating-wa" id="floatingWhatsapp" href="#" target="_blank" rel="noopener">Chat on WhatsApp</a>
+
+<nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+  <a class="mobile-bottom-nav__item is-active" href="#home" data-mobile-nav="home" aria-current="page" aria-label="Home">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.8 12 3l9 7.8"/><path d="M5.5 9.7V21h13V9.7"/><path d="M9.5 21v-6h5v6"/></svg>
+    <span>Home</span>
+  </a>
+  <a class="mobile-bottom-nav__item" href="#catalog" data-mobile-nav="catalog" aria-label="Shop products">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h18l-1.2-4H4.2L3 8Z"/><path d="M5 8v12h14V8"/><path d="M9 12h6"/></svg>
+    <span>Shop</span>
+  </a>
+  <a class="mobile-bottom-nav__item" href="#categories" data-mobile-nav="categories" aria-label="Product categories">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Categories</span>
+  </a>
+  <a class="mobile-bottom-nav__item mobile-bottom-nav__item--whatsapp" id="mobileNavWhatsapp" href="#" target="_blank" rel="noopener" aria-label="Contact Biriho Shop on WhatsApp">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.6a8.5 8.5 0 0 1-12.6 7.5L3 20.5l1.4-4.7A8.5 8.5 0 1 1 20.5 11.6Z"/><path d="M8.2 7.8c.3-.5.6-.5.9-.5h.5c.2 0 .4.1.5.4l.8 1.9c.1.3.1.5-.1.7l-.6.8c-.2.2-.2.4 0 .7.5.9 1.3 1.7 2.2 2.2.3.2.5.2.7 0l.8-1c.2-.2.4-.3.7-.2l1.8.9c.3.1.4.3.4.5 0 .4-.2 1.3-.8 1.8-.6.5-1.5.8-2.5.6-1.1-.2-2.6-.8-4.3-2.3-1.4-1.3-2.4-2.9-2.7-4-.3-1 .1-1.9.5-2.5Z"/></svg>
+    <span>WhatsApp</span>
+  </a>
+  <a class="mobile-bottom-nav__item" href="#about" data-mobile-nav="about" aria-label="About Biriho Shop">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+    <span>About</span>
+  </a>
+</nav>
+
+<script src="assets/shop.js"></script>
+</body>
+</html>
