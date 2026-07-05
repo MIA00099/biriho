@@ -6,8 +6,201 @@
 <meta name="theme-color" content="#0c1424">
 <meta name="robots" content="noindex, nofollow">
 <title>Biriho Shop | Admin</title>
-<link rel="stylesheet" href="assets/admin.css">
+<style>
+:root{
+  --bg:#f5f7fb;
+  --surface:#ffffff;
+  --ink:#0d1525;
+  --muted:#667085;
+  --line:#e4e8ef;
+  --dark:#0b1323;
+  --blue:#2f67f6;
+  --blue-dark:#1f4ec6;
+  --wa:#19b85a;
+  --wa-dark:#108d44;
+  --red:#e5484d;
+  --red-dark:#c53438;
+  --radius:22px;
+  --shadow:0 20px 55px rgba(15,23,42,.10);
+  --container:1240px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Inter,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+img{display:block;max-width:100%}
+a{text-decoration:none;color:inherit}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.container{width:min(calc(100% - 28px),var(--container));margin-inline:auto}
+.hidden{display:none!important}
 
+/* ---------- Config gate ---------- */
+#configScreen{min-height:100dvh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 20% 20%,#132247,#0b1323 60%)}
+.config-card{width:min(520px,100%);background:var(--surface);border-radius:28px;padding:34px 30px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.config-card h1{margin:0 0 6px;font-size:1.4rem;letter-spacing:-.03em}
+.config-card p{margin:0 0 18px;color:var(--muted);font-size:.86rem}
+.config-card code{background:#f2f4f7;padding:2px 6px;border-radius:6px;font-size:.82rem}
+
+/* ---------- Login ---------- */
+#loginScreen{min-height:100dvh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 20% 20%,#132247,#0b1323 60%)}
+.login-card{width:min(420px,100%);background:var(--surface);border-radius:28px;padding:36px 30px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.login-card .lock{width:56px;height:56px;border-radius:16px;background:#eaf0ff;display:grid;place-items:center;font-size:1.6rem;margin-bottom:18px}
+.login-card h1{margin:0 0 6px;font-size:1.5rem;letter-spacing:-.03em}
+.login-card p{margin:0 0 22px;color:var(--muted);font-size:.88rem}
+.field{margin-bottom:14px}
+.field label{display:block;margin-bottom:7px;font-size:.75rem;font-weight:900;color:#344054}
+.field input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:13px;padding:0 14px;outline:none;transition:.2s}
+.field input:focus{border-color:#9db7ff;box-shadow:0 0 0 4px rgba(47,103,246,.12)}
+.login-error{display:none;background:#fdeceb;color:var(--red-dark);border:1px solid #f6c6c6;padding:10px 12px;border-radius:12px;font-size:.8rem;font-weight:700;margin-bottom:14px}
+.login-error.show{display:block}
+.btn{border:0;border-radius:14px;min-height:49px;padding:0 20px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.15s}
+.btn-block{width:100%}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:var(--blue-dark)}
+.btn-wa{background:var(--wa);color:#fff}.btn-wa:hover{background:var(--wa-dark)}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{background:var(--red-dark)}
+.btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}.btn-ghost:hover{border-color:#b9c7e8}
+.btn-dark{background:var(--dark);color:#fff}.btn-dark:hover{background:#152036}
+.btn-sm{min-height:38px;padding:0 14px;font-size:.8rem;border-radius:11px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.login-hint{margin-top:16px;font-size:.72rem;color:var(--muted);text-align:center}
+
+/* ---------- Admin shell ---------- */
+.admin-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
+.admin-header .container{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-size:1.1rem;font-weight:950;letter-spacing:-.03em}
+.brand em{font-style:normal;color:var(--blue)}
+.brand-badge{background:var(--dark);color:#fff;font-size:.62rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:999px}
+.conn-dot{width:9px;height:9px;border-radius:999px;background:#c7cdd9;display:inline-block;margin-right:6px}
+.conn-dot.ok{background:var(--wa)}
+.conn-dot.err{background:var(--red)}
+.conn-status{display:flex;align-items:center;font-size:.72rem;color:var(--muted);font-weight:800}
+.header-right{display:flex;align-items:center;gap:14px}
+.admin-main{padding:26px 0 70px}
+.page-head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:16px;margin-bottom:22px}
+.page-head h2{margin:0;font-size:clamp(1.7rem,3vw,2.4rem);letter-spacing:-.04em}
+.page-head p{margin:6px 0 0;color:var(--muted);font-size:.9rem}
+
+.tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.tab-btn{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:900;font-size:.82rem;color:#475467}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.stat-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px}
+.stat-card .num{font-size:1.7rem;font-weight:950;letter-spacing:-.03em}
+.stat-card .label{color:var(--muted);font-size:.75rem;font-weight:800;margin-top:2px}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px;margin-bottom:20px}
+.toolbar-left{display:flex;flex-wrap:wrap;gap:10px;flex:1;min-width:0}
+.toolbar-right{display:flex;flex-wrap:wrap;gap:10px}
+.search-input{min-width:200px;flex:1;min-height:46px;border:1px solid var(--line);border-radius:999px;padding:0 18px;outline:none}
+.search-input:focus{border-color:#9db7ff}
+.dept-select{min-height:46px;border:1px solid var(--line);border-radius:999px;padding:0 16px;background:#fff;outline:none;font-weight:800}
+
+.table-wrap{background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+.p-row{display:grid;grid-template-columns:56px 1.6fr 1fr 1.4fr 130px;gap:14px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.p-row.head{background:#f8fafc;font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.p-row:last-child{border-bottom:0}
+.p-thumb{width:56px;height:44px;border-radius:10px;overflow:hidden;background:#e9edf3}
+.p-thumb img{width:100%;height:100%;object-fit:cover}
+.p-name{font-weight:850;overflow-wrap:anywhere}
+.p-dept{color:var(--blue);font-weight:800;font-size:.78rem}
+.p-specs{display:flex;flex-wrap:wrap;gap:5px}
+.p-specs span{background:#f2f4f7;color:#475467;font-size:.65rem;font-weight:800;padding:4px 7px;border-radius:8px}
+.row-actions{display:flex;gap:8px;justify-content:flex-end}
+.icon-btn{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;font-size:1rem}
+.icon-btn:hover{border-color:#b9c7e8}
+.icon-btn.danger:hover{border-color:#f3b9ba;background:#fdeceb}
+.empty-row{padding:60px 20px;text-align:center;color:var(--muted)}
+
+/* department chips grid */
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.dept-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.dept-card .top{display:flex;align-items:center;gap:10px}
+.dept-card .emoji{width:44px;height:44px;border-radius:13px;background:#eaf0ff;display:grid;place-items:center;font-size:1.4rem}
+.dept-card .name{font-weight:900;overflow-wrap:anywhere}
+.dept-card .count{color:var(--muted);font-size:.75rem;font-weight:800}
+.dept-card .actions{display:flex;gap:8px;margin-top:auto}
+
+/* ---------- Modal ---------- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(11,19,35,.62);display:grid;place-items:center;z-index:200;padding:16px;backdrop-filter:blur(5px)}
+.modal{width:min(760px,100%);max-height:92dvh;overflow:auto;background:var(--surface);border-radius:26px;padding:0;box-shadow:0 34px 90px rgba(11,19,35,.35);border:1px solid rgba(255,255,255,.6)}
+.modal.narrow{width:min(420px,100%);padding:28px}
+.modal-header{position:sticky;top:0;z-index:4;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:24px 28px 18px;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
+.modal-header-copy{min-width:0}
+.modal h3{margin:0 0 4px;font-size:1.45rem;letter-spacing:-.035em}
+.modal .sub{margin:0;color:var(--muted);font-size:.84rem}
+.modal-close{width:42px;height:42px;flex:0 0 42px;border:1px solid var(--line);border-radius:13px;background:#fff;color:#475467;font-size:1.35rem;line-height:1;display:grid;place-items:center;transition:.18s}
+.modal-close:hover{background:#f2f4f7;color:var(--ink);border-color:#cbd3df}
+.modal-body{padding:22px 28px 6px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field textarea{width:100%;border:1px solid var(--line);border-radius:13px;padding:12px 14px;outline:none;resize:vertical;min-height:92px}
+.field select{width:100%;min-height:48px;border:1px solid var(--line);border-radius:13px;padding:0 14px;background:#fff;outline:none}
+.field .help{margin-top:6px;font-size:.72rem;color:var(--muted)}
+.section-label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.section-label label{margin:0}
+.required-note{font-size:.68rem;font-weight:800;color:var(--muted);background:#f2f4f7;padding:4px 8px;border-radius:999px}
+.image-upload-card{border:1px solid var(--line);border-radius:19px;background:#f8fafc;padding:16px;margin-top:4px}
+.image-method{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.image-method-box{min-width:0;background:#fff;border:1px solid var(--line);border-radius:15px;padding:13px}
+.image-method-title{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:.76rem;font-weight:950;color:#344054}
+.method-number{width:24px;height:24px;border-radius:8px;background:#eaf0ff;color:var(--blue);display:grid;place-items:center;font-size:.7rem;font-weight:950}
+.image-method-box #fImage{min-height:45px;font-size:.84rem}
+.upload-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
+.file-picker{position:relative;min-width:0;min-height:45px;border:1px dashed #aebbd1;border-radius:12px;background:#f8fafc;display:flex;align-items:center;padding:0 12px;cursor:pointer;transition:.18s}
+.file-picker:hover{background:#f1f5ff;border-color:#7598ef}
+.file-picker input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.file-picker-copy{min-width:0;display:flex;align-items:center;gap:8px;color:#475467;font-size:.76rem;font-weight:850}
+.file-picker-icon{font-size:1rem;flex:0 0 auto}
+.file-name{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upload-row .btn{min-height:45px;white-space:nowrap}
+.upload-status{min-height:19px;font-size:.73rem;color:var(--muted);margin-top:7px;font-weight:750}
+.preview-box{width:100%;height:250px;border-radius:16px;background:linear-gradient(135deg,#eef2f7,#e5eaf1);overflow:hidden;margin-top:13px;position:relative;border:1px solid #dce2eb}
+.preview-box img{width:100%;height:100%;object-fit:contain;background:#fff;opacity:0;transition:opacity .2s}
+.preview-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;color:#667085;pointer-events:none}
+.preview-empty-icon{width:54px;height:54px;border-radius:16px;background:#fff;display:grid;place-items:center;font-size:1.5rem;box-shadow:0 8px 20px rgba(15,23,42,.08);margin-bottom:10px}
+.preview-empty strong{font-size:.86rem;color:#344054}
+.preview-empty span{font-size:.73rem;margin-top:3px}
+.preview-badge{position:absolute;left:10px;top:10px;z-index:2;padding:5px 8px;border-radius:999px;background:rgba(11,19,35,.82);color:#fff;font-size:.63rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase;backdrop-filter:blur(8px)}
+.specs-builder{border:1px solid var(--line);border-radius:18px;padding:15px;background:#fff}
+.specs-builder textarea{margin-top:1px}
+.specs-preview{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:29px}
+.specs-preview span{max-width:100%;padding:5px 8px;border-radius:8px;background:#eef3ff;color:#315ab6;font-size:.68rem;font-weight:850;overflow-wrap:anywhere}
+.specs-preview .empty-spec{background:#f2f4f7;color:#98a2b3;font-weight:750}
+.modal-actions{position:sticky;bottom:0;z-index:4;display:flex;justify-content:flex-end;gap:10px;margin-top:18px;padding:16px 28px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.97);border-top:1px solid var(--line);backdrop-filter:blur(14px)}
+.modal-actions .btn{min-width:126px}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--dark);color:#fff;padding:12px 20px;border-radius:999px;font-size:.85rem;font-weight:800;box-shadow:0 20px 45px rgba(0,0,0,.3);z-index:300;opacity:0;pointer-events:none;transition:.25s;max-width:calc(100% - 40px);text-align:center}
+.toast.show{opacity:1}
+
+@media (max-width:900px){
+  .stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .p-row{grid-template-columns:44px 1fr;grid-template-areas:"thumb name" "dept dept" "specs specs" "actions actions";row-gap:8px}
+  .p-row.head{display:none}
+  .p-thumb{grid-area:thumb;width:44px;height:36px}
+  .p-name{grid-area:name}
+  .p-dept{grid-area:dept}
+  .p-specs{grid-area:specs}
+  .row-actions{grid-area:actions;justify-content:flex-start}
+  .grid-2{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .modal-backdrop{padding:8px;align-items:end}
+  .modal{width:100%;max-height:96dvh;border-radius:24px 24px 0 0}
+  .modal-header{padding:19px 18px 15px}
+  .modal-body{padding:17px 16px 4px}
+  .image-method{grid-template-columns:1fr}
+  .preview-box{height:210px}
+  .modal-actions{padding:13px 16px calc(13px + env(safe-area-inset-bottom,0px))}
+  .modal-actions .btn{flex:1;min-width:0}
+  .toolbar{flex-direction:column;align-items:stretch}
+  .toolbar-right{justify-content:stretch}
+  .toolbar-right .btn{flex:1}
+  .header-right{gap:8px}
+  .conn-status span.txt{display:none}
+}
+</style>
 </head>
 <body>
 
@@ -129,15 +322,9 @@
             <input type="text" id="fName" required placeholder="e.g. Washing machine">
           </div>
           <div class="field">
-            <div class="department-field-head">
-              <label for="fDept">Department *</label>
-              <div class="department-tools" aria-label="Department actions">
-                <button type="button" class="dept-inline-btn" id="quickAddDeptBtn">+ Add department</button>
-                <button type="button" class="dept-inline-btn" id="quickEditDeptBtn">Edit selected</button>
-              </div>
-            </div>
+            <label for="fDept">Department *</label>
             <select id="fDept" required></select>
-            <div class="help">Add or edit a department here without closing the product form.</div>
+            <div class="help">Departments can be managed from the Departments tab.</div>
           </div>
         </div>
         <div class="grid-2">
@@ -207,34 +394,17 @@
 
 <!-- ============ DEPARTMENT MODAL ============ -->
 <div id="deptModalBackdrop" class="modal-backdrop hidden">
-  <div class="modal narrow" role="dialog" aria-modal="true" aria-labelledby="deptModalTitle">
-    <div class="modal-header">
-      <div class="modal-header-copy">
-        <h3 id="deptModalTitle">Add department</h3>
-        <p class="sub" id="deptModalSub">Create a category that customers can use to find products.</p>
-      </div>
-      <button type="button" class="modal-close" id="deptModalCloseBtn" aria-label="Close department form">×</button>
-    </div>
+  <div class="modal narrow">
+    <h3 id="deptModalTitle">Add department</h3>
+    <p class="sub">Give it a short icon (an emoji works well).</p>
     <form id="deptForm">
-      <div class="modal-body">
-        <div class="field">
-          <label for="dName">Department name *</label>
-          <input type="text" id="dName" required placeholder="e.g. Laundry" autocomplete="off">
-          <div class="help">This name appears in the shop category filters.</div>
-        </div>
-        <div class="grid-2">
-          <div class="field">
-            <label for="dIcon">Icon (emoji)</label>
-            <input type="text" id="dIcon" placeholder="🧺" maxlength="8">
-          </div>
-          <div class="field">
-            <label for="dOrder">Display order</label>
-            <input type="number" id="dOrder" min="1" step="1" inputmode="numeric">
-          </div>
-        </div>
-        <div class="department-impact" id="deptImpactNote">
-          <strong>Safe to use:</strong> adding a department does not change any existing products.
-        </div>
+      <div class="field">
+        <label for="dName">Department name *</label>
+        <input type="text" id="dName" required placeholder="e.g. Laundry">
+      </div>
+      <div class="field">
+        <label for="dIcon">Icon (emoji)</label>
+        <input type="text" id="dIcon" placeholder="🧺" maxlength="4">
       </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="cancelDeptModalBtn">Cancel</button>
@@ -246,6 +416,589 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/admin.js"></script>
+<script>
+
+/* ==========================================================================
+   SELF-CONTAINED DATA CLIENT
+   Uses the official Supabase browser library when available. If the CDN is
+   blocked or the page is opened directly with file://, it automatically uses
+   Supabase's REST API through fetch so the page never stays blank.
+   ========================================================================== */
+function createRestDataClient(baseUrl, anonKey){
+  const root = String(baseUrl || "").replace(/\/$/, "");
+  return {
+    from(table){
+      let method = "GET";
+      let body = null;
+      let selectedColumns = "*";
+      let orderBy = null;
+      const filters = [];
+
+      const query = {
+        select(columns = "*"){
+          method = "GET";
+          selectedColumns = columns;
+          return query;
+        },
+        insert(payload){
+          method = "POST";
+          body = payload;
+          return query;
+        },
+        update(payload){
+          method = "PATCH";
+          body = payload;
+          return query;
+        },
+        delete(){
+          method = "DELETE";
+          return query;
+        },
+        eq(column, value){
+          filters.push([column, value]);
+          return query;
+        },
+        order(column, options = {}){
+          orderBy = [column, options.ascending !== false ? "asc" : "desc"];
+          return query;
+        },
+        then(resolve, reject){
+          execute().then(resolve, reject);
+        }
+      };
+
+      async function execute(){
+        try{
+          const params = new URLSearchParams();
+          if(method === "GET") params.set("select", selectedColumns);
+          filters.forEach(([column, value]) => params.append(column, `eq.${value}`));
+          if(orderBy) params.set("order", `${orderBy[0]}.${orderBy[1]}`);
+
+          const url = `${root}/rest/v1/${encodeURIComponent(table)}${params.toString() ? `?${params}` : ""}`;
+          const headers = {
+            apikey: anonKey,
+            Authorization: `Bearer ${anonKey}`,
+            Accept: "application/json"
+          };
+          if(method !== "GET"){
+            headers["Content-Type"] = "application/json";
+            headers.Prefer = "return=representation";
+          }
+
+          const response = await fetch(url, {
+            method,
+            headers,
+            body: body === null ? undefined : JSON.stringify(body)
+          });
+          const text = await response.text();
+          let payload = null;
+          if(text){
+            try{ payload = JSON.parse(text); }
+            catch{ payload = text; }
+          }
+
+          if(!response.ok){
+            const message = payload && typeof payload === "object"
+              ? (payload.message || payload.hint || payload.details)
+              : String(payload || `${response.status} ${response.statusText}`);
+            return { data: null, error: { message } };
+          }
+          return { data: payload, error: null };
+        }catch(error){
+          return { data: null, error: { message: error?.message || "Network request failed" } };
+        }
+      }
+
+      return query;
+    }
+  };
+}
+
+function createDataClient(baseUrl, anonKey){
+  if(window.supabase && typeof window.supabase.createClient === "function"){
+    return window.supabase.createClient(baseUrl, anonKey);
+  }
+  return createRestDataClient(baseUrl, anonKey);
+}
+
+/* ==========================================================================
+   CONFIG — fill these in before using the dashboard.
+   ========================================================================== */
+const SUPABASE_URL = "https://cqjuirswcehwazmpyimm.supabase.co";           // e.g. https://xxxxxxxx.supabase.co
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxanVpcnN3Y2Vod2F6bXB5aW1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NDM0MzcsImV4cCI6MjA5NzUxOTQzN30.2sSVHJZnPxO-GUYu1p59i4xEuvA6Q1h_JvoeE4SOczM"; // Project Settings → API → anon public key
+const IMGBB_API_KEY = "8b4bdc7649720f7542d40df76a8ceae1";
+
+/* ==========================================================================
+   ADMIN LOGIN
+   Client-side password gate — keeps the page out of casual reach but is
+   NOT real security (the check lives in this page's own code). Real
+   protection over who can write to your data comes from Supabase Row Level
+   Security, which the setup SQL currently leaves open to anyone holding
+   the anon key so this simple dashboard can write to it. See the README
+   notes Claude gave you for how to tighten this later with Supabase Auth.
+   ========================================================================== */
+const ADMIN_PASSWORD = "biriho2026";
+const SESSION_KEY = "biriho_admin_session";
+
+const configScreen = document.getElementById("configScreen");
+const loginScreen = document.getElementById("loginScreen");
+const adminApp = document.getElementById("adminApp");
+
+
+function showStartupError(message){
+  configScreen.classList.remove("hidden");
+  loginScreen.classList.add("hidden");
+  adminApp.classList.add("hidden");
+  const card = configScreen.querySelector(".config-card");
+  if(card){
+    card.innerHTML = `
+      <div style="width:56px;height:56px;border-radius:16px;background:#fdeceb;display:grid;place-items:center;font-size:1.6rem;margin-bottom:16px">⚠️</div>
+      <h1>Admin page could not start</h1>
+      <p>${String(message || "Unknown startup error").replace(/[&<>\"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;","'":"&#39;"}[c]))}</p>
+      <p>Check your internet connection, then reload the page. The page can be opened directly from your Downloads folder.</p>`;
+  }
+}
+
+window.addEventListener("error", event => {
+  if(loginScreen.classList.contains("hidden") && adminApp.classList.contains("hidden")){
+    showStartupError(event.message);
+  }
+});
+window.addEventListener("unhandledrejection", event => {
+  console.error(event.reason);
+});
+
+let supabase = null;
+const isConfigured = SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY";
+
+if(!isConfigured){
+  configScreen.classList.remove("hidden");
+} else {
+  supabase = createDataClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  loginScreen.classList.remove("hidden");
+  if(sessionStorage.getItem(SESSION_KEY) === "1"){ showApp(); }
+}
+
+document.getElementById("loginForm")?.addEventListener("submit", e=>{
+  e.preventDefault();
+  const val = document.getElementById("passwordInput").value;
+  const loginError = document.getElementById("loginError");
+  if(val === ADMIN_PASSWORD){
+    sessionStorage.setItem(SESSION_KEY,"1");
+    loginError.classList.remove("show");
+    showApp();
+  } else {
+    loginError.classList.add("show");
+  }
+});
+document.getElementById("logoutBtn")?.addEventListener("click",()=>{
+  sessionStorage.removeItem(SESSION_KEY);
+  adminApp.classList.add("hidden");
+  loginScreen.classList.remove("hidden");
+  document.getElementById("passwordInput").value="";
+});
+
+function showApp(){
+  loginScreen.classList.add("hidden");
+  adminApp.classList.remove("hidden");
+  initData();
+}
+
+/* ==========================================================================
+   TABS
+   ========================================================================== */
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-"+btn.dataset.tab).classList.add("active");
+  });
+});
+
+/* ==========================================================================
+   DATA
+   ========================================================================== */
+let products = [];
+let departmentsData = []; // [{name, icon, sort_order}]
+let editingProductId = null;
+let editingDeptName = null;
+let searchTerm = "";
+let deptFilterValue = "All";
+
+function setConn(state, text){
+  const dot = document.getElementById("connDot");
+  const txt = document.getElementById("connText");
+  dot.className = "conn-dot" + (state ? " "+state : "");
+  txt.textContent = text;
+}
+
+async function initData(){
+  setConn("", "Connecting…");
+  const results = await Promise.all([fetchDepartments(), fetchProducts()]);
+  if(results.every(Boolean)) setConn("ok", "Connected");
+  renderAll();
+}
+
+async function fetchProducts(){
+  const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: true });
+  if(error){ setConn("err", "Connection error"); showToast("Couldn't load products: " + error.message); products = []; return false; }
+  products = data || [];
+  return true;
+}
+async function fetchDepartments(){
+  const { data, error } = await supabase.from("departments").select("*").order("sort_order", { ascending: true });
+  if(error){ setConn("err", "Connection error"); showToast("Couldn't load departments: " + error.message); departmentsData = []; return false; }
+  departmentsData = data || [];
+  return true;
+}
+
+/* ---------- Rendering: shared ---------- */
+function departmentNames(){ return departmentsData.map(d=>d.name); }
+
+function renderAll(){ renderDeptFilter(); renderProductFormDeptOptions(); renderProductList(); renderDeptGrid(); }
+
+/* ---------- Products list ---------- */
+const productList = document.getElementById("productList");
+const deptFilter = document.getElementById("deptFilter");
+
+function renderDeptFilter(){
+  deptFilter.innerHTML = ["All", ...departmentNames()].map(d=>`<option value="${escapeAttr(d)}">${escapeHtml(d)}</option>`).join("");
+  deptFilter.value = deptFilterValue;
+}
+
+function renderProductFormDeptOptions(){
+  const sel = document.getElementById("fDept");
+  if(!departmentNames().length){
+    sel.innerHTML = `<option value="">Add a department first</option>`;
+    return;
+  }
+  sel.innerHTML = departmentNames().map(d=>`<option value="${escapeAttr(d)}">${escapeHtml(d)}</option>`).join("");
+}
+
+function renderStats(filteredCount){
+  document.getElementById("statTotal").textContent = products.length;
+  document.getElementById("statDepts").textContent = departmentsData.length;
+  document.getElementById("statTvs").textContent = products.filter(p=>p.sizes && p.sizes.length).length;
+  document.getElementById("statFiltered").textContent = filteredCount;
+}
+
+function renderProductList(){
+  const filtered = products.filter(p=>{
+    const deptOk = deptFilterValue==="All" || p.department===deptFilterValue;
+    const hay = `${p.name} ${p.department} ${(p.specs||[]).join(" ")} ${p.brand||""}`.toLowerCase();
+    return deptOk && hay.includes(searchTerm.toLowerCase());
+  });
+  renderStats(filtered.length);
+
+  if(!filtered.length){
+    productList.innerHTML = `<div class="empty-row">No products match this search or filter.</div>`;
+    return;
+  }
+
+  productList.innerHTML = filtered.map(p=>`
+    <div class="p-row">
+      <div class="p-thumb"><img src="${escapeAttr(p.image)}" alt="" onerror="this.style.opacity=0"></div>
+      <div class="p-name">${escapeHtml(p.name)}${p.brand?` <span style="color:var(--muted);font-weight:700">· ${escapeHtml(p.brand)}</span>`:""}</div>
+      <div class="p-dept">${escapeHtml(p.department)}</div>
+      <div class="p-specs">${(p.specs||[]).map(s=>`<span>${escapeHtml(s)}</span>`).join("")}</div>
+      <div class="row-actions">
+        <button class="icon-btn" title="Edit" data-edit="${p.id}">✏️</button>
+        <button class="icon-btn danger" title="Delete" data-delete="${p.id}">🗑️</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function escapeHtml(str){ return String(str).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function escapeAttr(str){ return escapeHtml(str); }
+
+document.getElementById("searchInput").addEventListener("input", e=>{ searchTerm = e.target.value.trim(); renderProductList(); });
+deptFilter.addEventListener("change", e=>{ deptFilterValue = e.target.value; renderProductList(); });
+
+/* ---------- Departments grid ---------- */
+const deptGrid = document.getElementById("deptGrid");
+function renderDeptGrid(){
+  if(!departmentsData.length){
+    deptGrid.innerHTML = `<div class="empty-row" style="grid-column:1/-1">No departments yet — add your first one.</div>`;
+    return;
+  }
+  deptGrid.innerHTML = departmentsData.map(d=>{
+    const count = products.filter(p=>p.department===d.name).length;
+    return `<div class="dept-card">
+      <div class="top">
+        <div class="emoji">${escapeHtml(d.icon || "📦")}</div>
+        <div><div class="name">${escapeHtml(d.name)}</div><div class="count">${count} product${count===1?"":"s"}</div></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost btn-sm" data-edit-dept="${escapeAttr(d.name)}">Edit</button>
+        <button class="btn btn-ghost btn-sm" data-delete-dept="${escapeAttr(d.name)}">Delete</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ==========================================================================
+   PRODUCT MODAL
+   ========================================================================== */
+const modalBackdrop = document.getElementById("modalBackdrop");
+const productForm = document.getElementById("productForm");
+const modalTitle = document.getElementById("modalTitle");
+const fName = document.getElementById("fName");
+const fDept = document.getElementById("fDept");
+const fBrand = document.getElementById("fBrand");
+const fSizes = document.getElementById("fSizes");
+const fImage = document.getElementById("fImage");
+const fSpecs = document.getElementById("fSpecs");
+const previewImg = document.getElementById("previewImg");
+const previewEmpty = document.getElementById("previewEmpty");
+const fileNameText = document.getElementById("fileNameText");
+const specsPreview = document.getElementById("specsPreview");
+const fImageFile = document.getElementById("fImageFile");
+const uploadStatus = document.getElementById("uploadStatus");
+let localPreviewUrl = "";
+
+function setImagePreview(src){
+  const value = (src || "").trim();
+  if(!value){
+    previewImg.removeAttribute("src");
+    previewImg.style.opacity = 0;
+    previewEmpty.classList.remove("hidden");
+    return;
+  }
+  previewEmpty.classList.add("hidden");
+  previewImg.style.opacity = 0;
+  previewImg.onload = ()=>{
+    previewImg.style.opacity = 1;
+    previewEmpty.classList.add("hidden");
+  };
+  previewImg.onerror = ()=>{
+    previewImg.style.opacity = 0;
+    previewEmpty.classList.remove("hidden");
+    previewEmpty.querySelector("strong").textContent = "This image could not be displayed";
+    previewEmpty.querySelector("span").textContent = "Check the image link or choose another file.";
+  };
+  previewImg.src = value;
+}
+
+function resetPreviewMessage(){
+  previewEmpty.querySelector("strong").textContent = "Your product image will appear here";
+  previewEmpty.querySelector("span").textContent = "Paste a link or choose a file above.";
+}
+
+function renderSpecsPreview(){
+  const specs = fSpecs.value.split(",").map(s=>s.trim()).filter(Boolean);
+  specsPreview.innerHTML = specs.length
+    ? specs.map(spec=>`<span>${escapeHtml(spec)}</span>`).join("")
+    : `<span class="empty-spec">Your specification tags will appear here</span>`;
+}
+
+function openProductModal(id){
+  editingProductId = id;
+  renderProductFormDeptOptions();
+  if(id === null){
+    modalTitle.textContent = "Add product";
+    productForm.reset();
+    resetPreviewMessage();
+    setImagePreview("");
+    fileNameText.textContent = "Choose image";
+    uploadStatus.textContent = "PNG, JPG or WEBP recommended.";
+    renderSpecsPreview();
+  } else {
+    const p = products.find(x=>x.id===id);
+    modalTitle.textContent = "Edit product";
+    fName.value = p.name || "";
+    fDept.value = p.department || "";
+    fBrand.value = p.brand || "";
+    fSizes.value = (p.sizes||[]).join(", ");
+    fImage.value = p.image || "";
+    fSpecs.value = (p.specs||[]).join(", ");
+    resetPreviewMessage();
+    setImagePreview(p.image || "");
+    fileNameText.textContent = "Choose image";
+    uploadStatus.textContent = "PNG, JPG or WEBP recommended.";
+    renderSpecsPreview();
+  }
+  modalBackdrop.classList.remove("hidden");
+}
+function closeProductModal(){
+  modalBackdrop.classList.add("hidden");
+  editingProductId = null;
+  fImageFile.value = "";
+  fileNameText.textContent = "Choose image";
+  if(localPreviewUrl){ URL.revokeObjectURL(localPreviewUrl); localPreviewUrl = ""; }
+}
+
+document.getElementById("addProductBtn").addEventListener("click", ()=>{
+  if(!departmentNames().length){ showToast("Add a department first, from the Departments tab"); return; }
+  openProductModal(null);
+});
+document.getElementById("cancelModalBtn").addEventListener("click", closeProductModal);
+document.getElementById("modalCloseBtn").addEventListener("click", closeProductModal);
+modalBackdrop.addEventListener("click", e=>{ if(e.target===modalBackdrop) closeProductModal(); });
+document.addEventListener("keydown", e=>{ if(e.key === "Escape" && !modalBackdrop.classList.contains("hidden")) closeProductModal(); });
+fImage.addEventListener("input", ()=>{
+  resetPreviewMessage();
+  setImagePreview(fImage.value);
+});
+fImageFile.addEventListener("change", ()=>{
+  const file = fImageFile.files[0];
+  fileNameText.textContent = file ? file.name : "Choose image";
+  if(!file) return;
+  if(localPreviewUrl) URL.revokeObjectURL(localPreviewUrl);
+  localPreviewUrl = URL.createObjectURL(file);
+  resetPreviewMessage();
+  setImagePreview(localPreviewUrl);
+  uploadStatus.textContent = "Ready to upload. Click Upload to save it online.";
+});
+fSpecs.addEventListener("input", renderSpecsPreview);
+
+productList.addEventListener("click", async e=>{
+  const editBtn = e.target.closest("[data-edit]");
+  const delBtn = e.target.closest("[data-delete]");
+  if(editBtn){ openProductModal(editBtn.dataset.edit); }
+  if(delBtn){
+    const id = delBtn.dataset.delete;
+    const p = products.find(x=>x.id===id);
+    if(confirm(`Delete "${p.name}"? This can't be undone.`)){
+      const { error } = await supabase.from("products").delete().eq("id", id);
+      if(error){ showToast("Delete failed: " + error.message); return; }
+      await fetchProducts();
+      renderAll();
+      showToast("Product deleted");
+    }
+  }
+});
+
+/* ---------- ImgBB upload ---------- */
+document.getElementById("uploadBtn").addEventListener("click", async ()=>{
+  const file = fImageFile.files[0];
+  if(!file){ uploadStatus.textContent = "Choose an image file first."; return; }
+  uploadStatus.textContent = "Uploading image…";
+  try{
+    const fd = new FormData();
+    fd.append("image", file);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:"POST", body: fd });
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error?.message || "Upload failed");
+    fImage.value = data.data.url;
+    resetPreviewMessage();
+    setImagePreview(data.data.url);
+    uploadStatus.textContent = "Image uploaded successfully ✓";
+  }catch(err){
+    uploadStatus.textContent = "Upload failed: " + err.message;
+  }
+});
+
+productForm.addEventListener("submit", async e=>{
+  e.preventDefault();
+  const specs = fSpecs.value.split(",").map(s=>s.trim()).filter(Boolean);
+  const sizes = fSizes.value.split(",").map(s=>s.trim()).filter(Boolean);
+  const entry = {
+    name: fName.value.trim(),
+    department: fDept.value,
+    image: fImage.value.trim(),
+    brand: fBrand.value.trim() || null,
+    sizes: sizes.length ? sizes : null,
+    specs
+  };
+  const saveBtn = document.getElementById("saveProductBtn");
+  saveBtn.disabled = true;
+  let error;
+  if(editingProductId === null){
+    ({ error } = await supabase.from("products").insert(entry));
+  } else {
+    ({ error } = await supabase.from("products").update(entry).eq("id", editingProductId));
+  }
+  saveBtn.disabled = false;
+  if(error){ showToast("Save failed: " + error.message); return; }
+  await fetchProducts();
+  closeProductModal();
+  renderAll();
+  showToast(editingProductId === null ? "Product added" : "Product updated");
+});
+
+/* ==========================================================================
+   DEPARTMENT MODAL
+   ========================================================================== */
+const deptModalBackdrop = document.getElementById("deptModalBackdrop");
+const deptForm = document.getElementById("deptForm");
+const deptModalTitle = document.getElementById("deptModalTitle");
+const dName = document.getElementById("dName");
+const dIcon = document.getElementById("dIcon");
+
+function openDeptModal(name){
+  editingDeptName = name;
+  if(name === null){
+    deptModalTitle.textContent = "Add department";
+    deptForm.reset();
+    dName.disabled = false;
+  } else {
+    const d = departmentsData.find(x=>x.name===name);
+    deptModalTitle.textContent = "Edit department";
+    dName.value = d.name;
+    dIcon.value = d.icon || "";
+    dName.disabled = true; // renaming would need to update every product too; keep simple & safe
+  }
+  deptModalBackdrop.classList.remove("hidden");
+}
+function closeDeptModal(){ deptModalBackdrop.classList.add("hidden"); editingDeptName = null; }
+
+document.getElementById("addDeptBtn").addEventListener("click", ()=>openDeptModal(null));
+document.getElementById("cancelDeptModalBtn").addEventListener("click", closeDeptModal);
+deptModalBackdrop.addEventListener("click", e=>{ if(e.target===deptModalBackdrop) closeDeptModal(); });
+
+deptGrid.addEventListener("click", async e=>{
+  const editBtn = e.target.closest("[data-edit-dept]");
+  const delBtn = e.target.closest("[data-delete-dept]");
+  if(editBtn){ openDeptModal(editBtn.dataset.editDept); }
+  if(delBtn){
+    const name = delBtn.dataset.deleteDept;
+    const count = products.filter(p=>p.department===name).length;
+    if(count > 0){
+      showToast(`Can't delete "${name}" — ${count} product(s) still use it. Move or delete them first.`);
+      return;
+    }
+    if(confirm(`Delete department "${name}"?`)){
+      const { error } = await supabase.from("departments").delete().eq("name", name);
+      if(error){ showToast("Delete failed: " + error.message); return; }
+      await fetchDepartments();
+      renderAll();
+      showToast("Department deleted");
+    }
+  }
+});
+
+deptForm.addEventListener("submit", async e=>{
+  e.preventDefault();
+  const name = dName.value.trim();
+  const icon = dIcon.value.trim() || "📦";
+  const saveBtn = document.getElementById("saveDeptBtn");
+  saveBtn.disabled = true;
+  let error;
+  if(editingDeptName === null){
+    if(departmentNames().includes(name)){ showToast("That department already exists"); saveBtn.disabled=false; return; }
+    ({ error } = await supabase.from("departments").insert({ name, icon, sort_order: departmentsData.length + 1 }));
+  } else {
+    ({ error } = await supabase.from("departments").update({ icon }).eq("name", editingDeptName));
+  }
+  saveBtn.disabled = false;
+  if(error){ showToast("Save failed: " + error.message); return; }
+  await fetchDepartments();
+  closeDeptModal();
+  renderAll();
+  showToast(editingDeptName === null ? "Department added" : "Department updated");
+});
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function showToast(msg){
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove("show"), 3200);
+}
+</script>
 </body>
 </html>
