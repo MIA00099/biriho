@@ -17,7 +17,10 @@
 <div class="announcement"><strong>Biriho Shop</strong> — order directly on WhatsApp: +250 788 200 521</div>
 <header class="header">
   <div class="container nav">
-    <a href="#home" class="brand" aria-label="Biriho Shop home"><img src="biriho-logo.svg" alt="Biriho Shop logo" class="brand-logo"></a>
+    <a href="#home" class="brand" aria-label="Biriho Shop home">
+      <img src="biriho_shop_logo.png.png" alt="" class="brand-logo" aria-hidden="true">
+      <span class="brand-name">Biriho Shop</span>
+    </a>
     <form class="search" id="searchForm">
       <input id="searchInput" type="search" placeholder="Search product or category..." aria-label="Search products">
       <button type="submit">Search</button>
@@ -26,6 +29,23 @@
   </div>
 </header>
 <main id="home">
+  <section class="hero" aria-labelledby="heroTitle">
+    <div class="container">
+      <div class="hero-card">
+        <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=1800&q=86" alt="Modern electronics showroom" fetchpriority="high">
+        <div class="hero-content">
+          <span class="kicker">Biriho Shop &middot; Electronics &middot; Appliances &middot; Accessories</span>
+          <h1 id="heroTitle">See it. Choose it. <span>Order on WhatsApp.</span></h1>
+          <p>Browse real product categories, choose what you need and speak directly with a seller. No complicated cart and no confusing checkout.</p>
+          <div class="hero-actions">
+            <a class="btn btn-wa" href="#catalog">Shop now</a>
+            <a class="btn btn-light" id="heroWhatsapp" href="#" target="_blank" rel="noopener">Buy on WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="catalog" id="catalog">
     <div class="container">
       <div class="section-head">

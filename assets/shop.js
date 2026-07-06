@@ -17,7 +17,7 @@ const resultCount=document.getElementById("resultCount");
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const waLink=message=>`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 const generalMessage="Hello Biriho Shop, I visited your website and I want to buy a product. Please show me the available options, warranty and delivery information.";
-["headerWhatsapp","ctaWhatsapp","footerWhatsapp","floatingWhatsapp","mobileNavWhatsapp"].forEach(id=>{const el=document.getElementById(id);if(el)el.href=waLink(generalMessage)});
+["headerWhatsapp","heroWhatsapp","ctaWhatsapp","footerWhatsapp","floatingWhatsapp","mobileNavWhatsapp"].forEach(id=>{const el=document.getElementById(id);if(el)el.href=waLink(generalMessage)});
 
 async function supabaseGet(table,params=""){
   const response=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`,{headers});
