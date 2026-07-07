@@ -12,7 +12,6 @@ const productGrid=document.getElementById("productGrid");
 const departmentRow=document.getElementById("departmentRow");
 const departmentSelect=document.getElementById("departmentSelect");
 const searchInput=document.getElementById("searchInput");
-const resultCount=document.getElementById("resultCount");
 
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const waLink=message=>`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
@@ -37,12 +36,10 @@ function normalizeArray(value){
 
 function buildDepartmentUI(){
   const names=["All",...new Set(departments.map(d=>d.name).concat(products.map(p=>p.department)).filter(Boolean))];
-  const counts=products.reduce((map,p)=>{map[p.department]=(map[p.department]||0)+1;return map},{});
   departmentRow.innerHTML=names.map(name=>{
     const department=departments.find(d=>d.name===name);
-    const count=name==="All"?products.length:(counts[name]||0);
     const icon=name==="All"?"🛍️":(department?.icon||"📦");
-    return `<button type="button" class="chip ${name===activeDepartment?"active":""}" data-department="${escapeHtml(name)}" aria-pressed="${name===activeDepartment}"><span class="chip-icon" aria-hidden="true">${escapeHtml(icon)}</span><span class="chip-copy"><span class="chip-name">${escapeHtml(name==="All"?"All products":name)}</span><span class="chip-count">${count} ${count===1?"product":"products"}</span></span></button>`;
+    return `<button type="button" class="chip ${name===activeDepartment?"active":""}" data-department="${escapeHtml(name)}" aria-pressed="${name===activeDepartment}"><span class="chip-icon" aria-hidden="true">${escapeHtml(icon)}</span><span class="chip-copy"><span class="chip-name">${escapeHtml(name==="All"?"All products":name)}</span></span></button>`;
   }).join("");
   departmentSelect.innerHTML=names.map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name==="All"?"All products":name)}</option>`).join("");
   departmentSelect.value=activeDepartment;
@@ -54,7 +51,6 @@ function render(){
     const haystack=`${product.name||""} ${product.department||""} ${normalizeArray(product.specs).join(" ")} ${product.brand||""}`.toLowerCase();
     return matchesDepartment&&haystack.includes(searchTerm.toLowerCase());
   });
-  resultCount.textContent=`${filtered.length} product${filtered.length===1?"":"s"}`;
   productGrid.innerHTML=filtered.length?filtered.map((product,index)=>{
     const specs=normalizeArray(product.specs);
     const sizes=normalizeArray(product.sizes);
@@ -110,7 +106,6 @@ async function loadCatalog(){
     products=[];
     departments=[];
     productGrid.innerHTML='<div class="no-results"><h3>Products could not load</h3><p>Please check your internet connection and Supabase setup.</p></div>';
-    resultCount.textContent="0 products";
     buildDepartmentUI();
     return;
   }

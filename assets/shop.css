@@ -60,7 +60,7 @@ button{cursor:pointer}
 .chip{min-height:44px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:#475467;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:.78rem;font-weight:900;text-align:left;transition:background .2s,color .2s,border-color .2s,transform .2s,box-shadow .2s}
 .chip:hover{transform:translateY(-1px);border-color:#b9c7e8;box-shadow:0 8px 20px rgba(15,23,42,.08)}
 .chip.active{background:var(--dark);color:#fff;border-color:var(--dark);box-shadow:0 10px 24px rgba(11,19,35,.18)}
-.chip-icon,.chip-count{display:none}
+.chip-icon{display:none}
 .chip-name{display:block}
 .department-select-wrap label{display:block;margin-bottom:7px;color:#344054;font-size:.75rem;font-weight:900}
 .department-select-wrap select{width:100%;min-height:50px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);padding:0 14px;font-weight:850;outline:none}
@@ -112,9 +112,7 @@ footer{background:var(--dark);color:#98a2b3;padding:40px 0 24px}.footer-top{disp
   .chip-icon{display:grid;place-items:center;width:54px;height:54px;flex:0 0 54px;border-radius:16px;background:#eaf0ff;font-size:1.75rem;line-height:1}
   .chip-copy{min-width:0;display:block}
   .chip-name{display:block;color:inherit;font-size:.82rem;font-weight:950;overflow-wrap:anywhere}
-  .chip-count{display:block;margin-top:5px;color:#667085;font-size:.68rem;font-weight:800}
   .chip.active .chip-icon{background:rgba(255,255,255,.14)}
-  .chip.active .chip-count{color:#cbd5e1}
 }
 @media (max-width:560px){
   body{padding-bottom:76px}
@@ -145,9 +143,7 @@ footer{background:var(--dark);color:#98a2b3;padding:40px 0 24px}.footer-top{disp
   .chip-icon{display:grid;place-items:center;width:54px;height:54px;flex:0 0 54px;border-radius:16px;background:#eaf0ff;font-size:1.75rem;line-height:1}
   .chip-copy{min-width:0;display:block}
   .chip-name{display:block;color:inherit;font-size:.82rem;font-weight:950;overflow-wrap:anywhere}
-  .chip-count{display:block;margin-top:5px;color:#667085;font-size:.68rem;font-weight:800}
   .chip.active .chip-icon{background:rgba(255,255,255,.14)}
-  .chip.active .chip-count{color:#cbd5e1}
   .product-grid{grid-template-columns:1fr;gap:14px;margin-top:16px}
   .product-card{border-radius:19px}
   .product-photo{aspect-ratio:1/1}
