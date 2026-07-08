@@ -6,7 +6,6 @@
 
   const productsById = new Map();
   const whatsappNumber = "250788200521";
-  let observer;
 
   const formatPrice = value => {
     const number = Number(value);
@@ -52,15 +51,20 @@
       if (!button || !body) return;
       const product = productsById.get(button.dataset.productId);
       if (!product) return;
+
       const formatted = formatPrice(product.price);
+      const nextClass = `product-price${formatted ? "" : " price-request"}`;
+      const nextContent = `<span class="product-price-label">Price</span>${formatted || "Price on request"}`;
       let price = body.querySelector(".product-price");
+
       if (!price) {
         price = document.createElement("div");
         const specs = body.querySelector(".specs");
         body.insertBefore(price, specs || body.querySelector(".ask-btn"));
       }
-      price.className = `product-price${formatted ? "" : " price-request"}`;
-      price.innerHTML = `<span class="product-price-label">Price</span>${formatted || "Price on request"}`;
+
+      if (price.className !== nextClass) price.className = nextClass;
+      if (price.innerHTML !== nextContent) price.innerHTML = nextContent;
     });
   }
 
@@ -69,6 +73,7 @@
     if (!button) return;
     const product = productsById.get(button.dataset.productId);
     if (!product) return;
+
     event.preventDefault();
     event.stopImmediatePropagation();
     const card = button.closest(".product-card");
@@ -79,7 +84,12 @@
   }, true);
 
   ensureStyles();
-  observer = new MutationObserver(decorateCards);
-  observer.observe(grid, {childList: true, subtree: true});
+
+  // The storefront replaces the direct children of productGrid after searches
+  // and category changes. Observing only direct children avoids a self-triggering
+  // loop when the price element itself is inserted or updated inside a card.
+  const observer = new MutationObserver(decorateCards);
+  observer.observe(grid, {childList: true});
+
   loadPrices().catch(error => console.warn("Price feature:", error.message));
 })();
