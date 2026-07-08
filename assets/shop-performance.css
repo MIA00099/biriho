@@ -1,0 +1,68 @@
+/* Faster product rendering and integrated price presentation */
+.product-card{
+  content-visibility:auto;
+  contain:layout paint style;
+  contain-intrinsic-size:520px;
+}
+.product-photo img{
+  aspect-ratio:1/1;
+}
+.product-price{
+  margin-top:12px;
+  color:var(--ink);
+  font-size:1.14rem;
+  font-weight:950;
+  letter-spacing:-.025em;
+  line-height:1.15;
+}
+.product-price.price-request{
+  color:var(--muted);
+  font-size:.78rem;
+  font-weight:850;
+  letter-spacing:0;
+}
+.product-price-label{
+  display:block;
+  margin-bottom:3px;
+  color:var(--muted);
+  font-size:.61rem;
+  font-weight:950;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.catalog-loading{
+  min-height:190px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+}
+.loading-spinner{
+  width:32px;
+  height:32px;
+  border:3px solid #dce3ef;
+  border-top-color:var(--blue);
+  border-radius:50%;
+  animation:catalog-spin .8s linear infinite;
+}
+@keyframes catalog-spin{to{transform:rotate(360deg)}}
+
+@media (hover:none){
+  .product-card:hover{transform:none;box-shadow:none}
+  .product-photo img{transition:none}
+  .product-card:hover .product-photo img{transform:none}
+}
+
+@media (max-width:560px){
+  .product-card{contain-intrinsic-size:610px}
+  .product-photo img{padding:9px}
+  .product-price{font-size:1.08rem}
+  .specs{gap:5px}
+  .specs span{padding:4px 7px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .loading-spinner{animation:none}
+  .product-card,.product-photo img{transition:none!important}
+}
