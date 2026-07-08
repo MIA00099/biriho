@@ -1,6 +1,6 @@
--- Biriho Shop price feature migration
+-- Biriho Shop price and catalog performance migration
 -- Run this once in Supabase SQL Editor.
--- It keeps all existing products and only adds the new price field.
+-- It keeps all existing products and departments.
 
 alter table public.products
   add column if not exists price numeric(12,2);
@@ -8,7 +8,7 @@ alter table public.products
 comment on column public.products.price is
   'Selling price in Rwandan francs (RWF). NULL means price on request.';
 
--- Prevent negative prices while allowing existing products to remain without a price.
+-- Prevent invalid negative prices while allowing products with no price yet.
 do $$
 begin
   if not exists (
@@ -23,4 +23,17 @@ begin
   end if;
 end $$;
 
-select 'Price feature installed successfully' as result;
+-- These indexes make department filtering and ordered catalog loading faster.
+create index if not exists products_department_idx
+  on public.products (department);
+
+create index if not exists products_created_at_idx
+  on public.products (created_at);
+
+create index if not exists departments_sort_order_idx
+  on public.departments (sort_order, name);
+
+analyze public.products;
+analyze public.departments;
+
+select 'Price and catalog performance features installed successfully' as result;
