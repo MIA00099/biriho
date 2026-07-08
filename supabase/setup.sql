@@ -1,5 +1,6 @@
 -- Biriho Shop Supabase setup
 -- Safe for both a new project and an existing Biriho database.
+-- Your full catalog seed SQL can be run before or after this file.
 
 create extension if not exists pgcrypto;
 
@@ -22,8 +23,13 @@ create table if not exists public.products (
   constraint products_price_nonnegative check (price is null or price >= 0)
 );
 
--- Upgrade older Biriho databases without deleting data.
+-- Upgrade an older Biriho database without deleting existing catalog data.
 alter table public.products add column if not exists price numeric(12,2);
+
+-- Faster catalog ordering and department filtering.
+create index if not exists products_department_idx on public.products (department);
+create index if not exists products_created_at_idx on public.products (created_at);
+create index if not exists departments_sort_order_idx on public.departments (sort_order, name);
 
 alter table public.departments enable row level security;
 alter table public.products enable row level security;
@@ -43,5 +49,8 @@ begin
     create policy "Public write products" on public.products for all using (true) with check (true);
   end if;
 end $$;
+
+analyze public.products;
+analyze public.departments;
 
 select 'Biriho Shop database is ready' as result;
