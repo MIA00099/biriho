@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Force the secure canonical domain when hosted on Apache.
+RewriteCond %{HTTPS} !=on [OR]
+RewriteCond %{HTTP_HOST} ^www\.biriho\.shop$ [NC]
+RewriteRule ^ https://biriho.shop%{REQUEST_URI} [R=301,L]
+
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
