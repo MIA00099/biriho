@@ -1,13 +1,17 @@
--- Biriho Shop Supabase setup
--- Safe for both a new project and an existing Biriho database.
--- Your full catalog seed SQL can be run before or after this file.
+-- ============================================================
+-- Biriho Shop: safe base database setup
+-- ============================================================
+-- This file is NON-DESTRUCTIVE. It never drops products or departments.
+-- For an existing database, run supabase/secure-database.sql instead.
+-- ============================================================
 
 create extension if not exists pgcrypto;
 
 create table if not exists public.departments (
   name text primary key,
   icon text not null default '📦',
-  sort_order integer not null default 0
+  sort_order integer not null default 0,
+  updated_at timestamptz not null default now()
 );
 
 create table if not exists public.products (
@@ -20,13 +24,15 @@ create table if not exists public.products (
   sizes text[],
   specs text[] not null default '{}',
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   constraint products_price_nonnegative check (price is null or price >= 0)
 );
 
--- Upgrade an older Biriho database without deleting existing catalog data.
+-- Safe upgrades for older Biriho databases. Existing rows are preserved.
 alter table public.products add column if not exists price numeric(12,2);
+alter table public.products add column if not exists updated_at timestamptz not null default now();
+alter table public.departments add column if not exists updated_at timestamptz not null default now();
 
--- Faster catalog ordering and department filtering.
 create index if not exists products_department_idx on public.products (department);
 create index if not exists products_created_at_idx on public.products (created_at);
 create index if not exists departments_sort_order_idx on public.departments (sort_order, name);
@@ -34,23 +40,41 @@ create index if not exists departments_sort_order_idx on public.departments (sor
 alter table public.departments enable row level security;
 alter table public.products enable row level security;
 
+-- Remove the old unsafe anonymous-write policies if they exist.
+drop policy if exists "Public write products" on public.products;
+drop policy if exists "Public write departments" on public.departments;
+
+-- Public visitors may read the catalog.
 do $$
 begin
-  if not exists (select 1 from pg_policies where schemaname='public' and tablename='departments' and policyname='Public read departments') then
-    create policy "Public read departments" on public.departments for select using (true);
+  if not exists (
+    select 1 from pg_policies
+    where schemaname='public' and tablename='products' and policyname='Public read products'
+  ) then
+    create policy "Public read products"
+      on public.products for select
+      to anon, authenticated
+      using (true);
   end if;
-  if not exists (select 1 from pg_policies where schemaname='public' and tablename='products' and policyname='Public read products') then
-    create policy "Public read products" on public.products for select using (true);
-  end if;
-  if not exists (select 1 from pg_policies where schemaname='public' and tablename='departments' and policyname='Public write departments') then
-    create policy "Public write departments" on public.departments for all using (true) with check (true);
-  end if;
-  if not exists (select 1 from pg_policies where schemaname='public' and tablename='products' and policyname='Public write products') then
-    create policy "Public write products" on public.products for all using (true) with check (true);
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname='public' and tablename='departments' and policyname='Public read departments'
+  ) then
+    create policy "Public read departments"
+      on public.departments for select
+      to anon, authenticated
+      using (true);
   end if;
 end $$;
+
+-- The complete admin-only write policies, automatic history and recovery
+-- protection are installed by supabase/secure-database.sql.
 
 analyze public.products;
 analyze public.departments;
 
-select 'Biriho Shop database is ready' as result;
+select
+  'Safe Biriho base setup complete. Run secure-database.sql next.' as result,
+  (select count(*) from public.products) as products_preserved,
+  (select count(*) from public.departments) as departments_preserved;
