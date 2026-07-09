@@ -2,7 +2,6 @@
 
 let SUPABASE_URL = "";
 let SUPABASE_ANON_KEY = "";
-const ADMIN_EMAIL = "happycyusa02@gmail.com";
 const AUTH_SESSION_KEY = "biriho_supabase_admin_auth";
 const $ = id => document.getElementById(id);
 
@@ -96,18 +95,12 @@ async function authRequest(path, {method = "GET", body, token} = {}) {
   return data;
 }
 
-async function signIn(password) {
+async function signIn(email, password) {
   const session = await authRequest("token?grant_type=password", {
     method: "POST",
-    body: {email: ADMIN_EMAIL, password}
+    body: {email, password}
   });
-  const email = String(session?.user?.email || "").toLowerCase();
-  if (email !== ADMIN_EMAIL.toLowerCase()) {
-    if (session?.access_token) {
-      try { await authRequest("logout", {method: "POST", token: session.access_token}); } catch {}
-    }
-    throw new Error("This account is not authorized for Biriho Shop admin.");
-  }
+  if (!session?.access_token || !session?.user?.id) throw new Error("Authentication failed.");
   saveAuthSession(session);
 }
 
@@ -117,9 +110,7 @@ async function refreshAuthSession() {
     method: "POST",
     body: {refresh_token: authSession.refresh_token}
   });
-  if (String(session?.user?.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-    throw new Error("This account is not authorized.");
-  }
+  if (!session?.access_token || !session?.user?.id) throw new Error("Authentication failed.");
   saveAuthSession(session);
   return session;
 }
@@ -131,7 +122,7 @@ async function restoreAuthSession() {
     authSession = stored;
     try {
       const user = await authRequest("user", {token: stored.access_token});
-      return String(user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      return Boolean(user?.id);
     } catch {
       await refreshAuthSession();
       return true;
@@ -168,7 +159,7 @@ async function api(table, {method = "GET", query = "", body, retry = true} = {})
   if (!response.ok) {
     const message = data?.message || data?.hint || `${response.status} ${response.statusText}`;
     if (/row-level security|policy/i.test(message)) {
-      throw new Error("Database blocked this change. Run supabase/secure-database.sql and sign in with the approved Supabase admin account.");
+      throw new Error("Database blocked this change. Run supabase/secure-database.sql and sign in with an authenticated Supabase account.");
     }
     if (/price/i.test(message) && /column|schema cache/i.test(message)) {
       throw new Error("Price column is missing. Run supabase/add-price.sql in Supabase first.");
@@ -184,11 +175,11 @@ $("loginForm").addEventListener("submit", async event => {
   button.disabled = true;
   clearLoginError();
   try {
-    await signIn($("passwordInput").value);
+    await signIn($("emailInput").value.trim(), $("passwordInput").value);
     $("passwordInput").value = "";
     showApp();
   } catch (error) {
-    setLoginError(error.message === "Invalid login credentials" ? "Incorrect Supabase admin password." : error.message);
+    setLoginError(error.message === "Invalid login credentials" ? "Incorrect email or password." : error.message);
   } finally {
     button.disabled = false;
   }
