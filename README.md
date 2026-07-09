@@ -5,18 +5,19 @@ Responsive electronics and home-appliance catalog with WhatsApp ordering and a S
 ## Files
 
 - `index.html` — public storefront
-- `admin.html` — private admin dashboard for products and departments
+- `admin.html` — password-protected admin dashboard
+- `assets/catalog.js` — storefront products, prices, search and WhatsApp logic
 - `assets/shop.css` — storefront styles
-- `assets/shop.js` — storefront logic
 - `assets/admin.css` — admin styles
-- `assets/admin.js` — admin logic
-- `supabase/setup.sql` — database tables, Row Level Security policies, and admin registration
+- `assets/admin.js` — product and department management
+- `supabase/setup.sql` — non-destructive database setup
+- `supabase/add-price.sql` — safe price-column and performance upgrade
 
 ## Setup
 
-1. Create the admin user in Supabase Authentication.
-2. Run `supabase/setup.sql` in the Supabase SQL Editor.
-3. Open `admin.html` and sign in.
-4. Deploy the repository with GitHub Pages, Netlify, or another static host.
+1. Run `supabase/setup.sql` in the Supabase SQL Editor.
+2. Open `admin.html`.
+3. Enter the admin password: `biriho2026`.
+4. Add, edit or delete products and departments.
 
-The Supabase anon key is a browser-side public key. Database protection depends on the Row Level Security policies in `supabase/setup.sql`. The ImgBB upload key is also used in the browser and can be seen by visitors with access to the admin page.
+The setup does not drop existing products or departments. The Supabase anon key is used in the browser so the storefront and simple admin can communicate with the database.
