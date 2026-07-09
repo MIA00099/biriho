@@ -25,20 +25,20 @@
     <div class="login-card">
       <div class="lock">🔒</div>
       <h1>Biriho Shop Admin</h1>
-      <p>Sign in securely with the Supabase admin account.</p>
-      <div id="loginError" class="alert hidden">Incorrect Supabase admin password.</div>
+      <p>Sign in with your Supabase account.</p>
+      <div id="loginError" class="alert hidden">Incorrect email or password.</div>
       <form id="loginForm">
         <label class="field">
-          <span>Admin email</span>
-          <input type="email" value="happycyusa02@gmail.com" autocomplete="username" readonly>
+          <span>Email</span>
+          <input id="emailInput" type="email" autocomplete="username" required>
         </label>
         <label class="field">
-          <span>Supabase admin password</span>
+          <span>Password</span>
           <input id="passwordInput" type="password" autocomplete="current-password" required>
         </label>
-        <button class="btn btn-primary btn-block" type="submit">Secure sign in</button>
+        <button class="btn btn-primary btn-block" type="submit">Sign in</button>
       </form>
-      <small>Only this authenticated account can change products or departments.</small>
+      <small>Only authenticated Supabase users can change products or departments.</small>
     </div>
   </section>
 
