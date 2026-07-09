@@ -151,5 +151,49 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="assets/admin.js"></script>
+  <script>
+  (function(){
+    var form=document.getElementById("loginForm");
+    var input=document.getElementById("passwordInput");
+    var error=document.getElementById("loginError");
+    var logout=document.getElementById("logoutBtn");
+    var sessionKey="biriho_admin_session";
+    var passwordHash="cf59ddb11719e53eecf48c5f78f76392894c5d52173b4331a0ef4c639ff6ee5a";
+
+    sessionStorage.removeItem("biriho_supabase_admin_auth");
+
+    async function hash(value){
+      var digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));
+      return Array.from(new Uint8Array(digest)).map(function(byte){return byte.toString(16).padStart(2,"0")}).join("");
+    }
+
+    form.addEventListener("submit",async function(event){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if(await hash(input.value)===passwordHash){
+        sessionStorage.setItem(sessionKey,"1");
+        error.classList.add("hidden");
+        input.value="";
+        showApp();
+      }else{
+        error.textContent="Incorrect password. Please try again.";
+        error.classList.remove("hidden");
+      }
+    },true);
+
+    logout.addEventListener("click",function(event){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      sessionStorage.removeItem(sessionKey);
+      input.value="";
+      showLogin();
+    },true);
+
+    window.addEventListener("load",function(){
+      if(sessionStorage.getItem(sessionKey)==="1")showApp();
+      else showLogin();
+    });
+  })();
+  </script>
 </body>
 </html>
