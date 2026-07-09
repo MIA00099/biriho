@@ -2,10 +2,11 @@
 
 let SUPABASE_URL = "";
 let SUPABASE_ANON_KEY = "";
-const ADMIN_PASSWORD_HASH = "cf59ddb11719e53eecf48c5f78f76392894c5d52173b4331a0ef4c639ff6ee5a";
-const SESSION_KEY = "biriho_admin_session";
+const ADMIN_EMAIL = "happycyusa02@gmail.com";
+const AUTH_SESSION_KEY = "biriho_supabase_admin_auth";
 const $ = id => document.getElementById(id);
 
+let authSession = null;
 let products = [];
 let departments = [];
 let editingProductId = null;
@@ -19,43 +20,26 @@ const formatPrice = value => {
   return Number.isFinite(number) && number > 0 ? `${number.toLocaleString("en-US", {maximumFractionDigits: 2})} RWF` : "Price not set";
 };
 
-async function api(table, {method = "GET", query = "", body} = {}) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query ? `?${query}` : ""}`, {
-    method,
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: "return=representation"
-    },
-    body: body === undefined ? undefined : JSON.stringify(body)
-  });
-  const text = await response.text();
-  let data = null;
-  if (text) {
-    try { data = JSON.parse(text); } catch { data = text; }
-  }
-  if (!response.ok) {
-    const message = data?.message || data?.hint || `${response.status} ${response.statusText}`;
-    if (/price/i.test(message) && /column|schema cache/i.test(message)) {
-      throw new Error("Price column is missing. Run supabase/add-price.sql in Supabase first.");
-    }
-    throw new Error(message);
-  }
-  return data;
-}
-
 function showToast(message) {
   const toast = $("toast");
   toast.textContent = message;
   toast.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove("show"), 3200);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 3400);
 }
 
 function setConnection(state, text) {
   $("connDot").className = state || "";
   $("connText").textContent = text;
+}
+
+function setLoginError(message) {
+  $("loginError").textContent = message;
+  $("loginError").classList.remove("hidden");
+}
+
+function clearLoginError() {
+  $("loginError").classList.add("hidden");
 }
 
 function showLogin() {
@@ -67,12 +51,6 @@ function showApp() {
   $("loginScreen").classList.add("hidden");
   $("adminApp").classList.remove("hidden");
   loadAll();
-}
-
-async function hashText(value) {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
 async function loadPublicConfig() {
@@ -87,20 +65,141 @@ async function loadPublicConfig() {
   SUPABASE_ANON_KEY = keyMatch[1];
 }
 
+function saveAuthSession(session) {
+  authSession = session;
+  sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+}
+
+function clearAuthSession() {
+  authSession = null;
+  sessionStorage.removeItem(AUTH_SESSION_KEY);
+}
+
+async function authRequest(path, {method = "GET", body, token} = {}) {
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
+    method,
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${token || SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  const text = await response.text();
+  let data = null;
+  if (text) {
+    try { data = JSON.parse(text); } catch { data = text; }
+  }
+  if (!response.ok) {
+    throw new Error(data?.msg || data?.message || data?.error_description || `${response.status} ${response.statusText}`);
+  }
+  return data;
+}
+
+async function signIn(password) {
+  const session = await authRequest("token?grant_type=password", {
+    method: "POST",
+    body: {email: ADMIN_EMAIL, password}
+  });
+  const email = String(session?.user?.email || "").toLowerCase();
+  if (email !== ADMIN_EMAIL.toLowerCase()) {
+    if (session?.access_token) {
+      try { await authRequest("logout", {method: "POST", token: session.access_token}); } catch {}
+    }
+    throw new Error("This account is not authorized for Biriho Shop admin.");
+  }
+  saveAuthSession(session);
+}
+
+async function refreshAuthSession() {
+  if (!authSession?.refresh_token) throw new Error("Your admin session expired. Please sign in again.");
+  const session = await authRequest("token?grant_type=refresh_token", {
+    method: "POST",
+    body: {refresh_token: authSession.refresh_token}
+  });
+  if (String(session?.user?.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    throw new Error("This account is not authorized.");
+  }
+  saveAuthSession(session);
+  return session;
+}
+
+async function restoreAuthSession() {
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY) || "null");
+    if (!stored?.access_token) return false;
+    authSession = stored;
+    try {
+      const user = await authRequest("user", {token: stored.access_token});
+      return String(user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    } catch {
+      await refreshAuthSession();
+      return true;
+    }
+  } catch {
+    clearAuthSession();
+    return false;
+  }
+}
+
+async function api(table, {method = "GET", query = "", body, retry = true} = {}) {
+  const token = authSession?.access_token || SUPABASE_ANON_KEY;
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query ? `?${query}` : ""}`, {
+    method,
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation"
+    },
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+
+  if (response.status === 401 && retry && authSession?.refresh_token) {
+    await refreshAuthSession();
+    return api(table, {method, query, body, retry: false});
+  }
+
+  const text = await response.text();
+  let data = null;
+  if (text) {
+    try { data = JSON.parse(text); } catch { data = text; }
+  }
+  if (!response.ok) {
+    const message = data?.message || data?.hint || `${response.status} ${response.statusText}`;
+    if (/row-level security|policy/i.test(message)) {
+      throw new Error("Database blocked this change. Run supabase/secure-database.sql and sign in with the approved Supabase admin account.");
+    }
+    if (/price/i.test(message) && /column|schema cache/i.test(message)) {
+      throw new Error("Price column is missing. Run supabase/add-price.sql in Supabase first.");
+    }
+    throw new Error(message);
+  }
+  return data;
+}
+
 $("loginForm").addEventListener("submit", async event => {
   event.preventDefault();
-  const valid = await hashText($("passwordInput").value) === ADMIN_PASSWORD_HASH;
-  if (valid) {
-    sessionStorage.setItem(SESSION_KEY, "1");
-    $("loginError").classList.add("hidden");
+  const button = event.currentTarget.querySelector("button");
+  button.disabled = true;
+  clearLoginError();
+  try {
+    await signIn($("passwordInput").value);
+    $("passwordInput").value = "";
     showApp();
-  } else {
-    $("loginError").classList.remove("hidden");
+  } catch (error) {
+    setLoginError(error.message === "Invalid login credentials" ? "Incorrect Supabase admin password." : error.message);
+  } finally {
+    button.disabled = false;
   }
 });
 
-$("logoutBtn").addEventListener("click", () => {
-  sessionStorage.removeItem(SESSION_KEY);
+$("logoutBtn").addEventListener("click", async () => {
+  const token = authSession?.access_token;
+  if (token) {
+    try { await authRequest("logout", {method: "POST", token}); } catch {}
+  }
+  clearAuthSession();
   $("passwordInput").value = "";
   showLogin();
 });
@@ -119,7 +218,7 @@ async function loadAll() {
     ]);
     departments = departmentData || [];
     products = productData || [];
-    setConnection("ok", "Connected");
+    setConnection("ok", "Securely connected");
     renderAll();
   } catch (error) {
     setConnection("err", "Connection error");
@@ -269,7 +368,7 @@ $("productForm").addEventListener("submit", async event => {
     else await api("products", {method: "POST", body: entry});
     closeProduct();
     await loadAll();
-    showToast(wasEditing ? "Product and price updated" : "Product added");
+    showToast(wasEditing ? "Product and price updated safely" : "Product added safely");
   } catch (error) {
     showToast(`Save failed: ${error.message}`);
   } finally {
@@ -283,11 +382,11 @@ $("productList").addEventListener("click", async event => {
   if (editButton) return openProduct(products.find(product => String(product.id) === editButton.dataset.editProduct));
   if (!deleteButton) return;
   const product = products.find(item => String(item.id) === deleteButton.dataset.deleteProduct);
-  if (!product || !confirm(`Delete ${product.name}?`)) return;
+  if (!product || !confirm(`Delete ${product.name}? A recovery copy will remain in catalog history.`)) return;
   try {
     await api("products", {method: "DELETE", query: `id=eq.${encodeURIComponent(product.id)}`});
     await loadAll();
-    showToast("Product deleted");
+    showToast("Product deleted; recovery history was preserved");
   } catch (error) { showToast(error.message); }
 });
 
@@ -324,7 +423,7 @@ $("deptForm").addEventListener("submit", async event => {
     else await api("departments", {method: "POST", body: entry});
     closeDepartment();
     await loadAll();
-    showToast(wasEditing ? "Department updated" : "Department added");
+    showToast(wasEditing ? "Department updated safely" : "Department added safely");
   } catch (error) { showToast(`Save failed: ${error.message}`); }
   finally { $("saveDeptBtn").disabled = false; }
 });
@@ -337,11 +436,11 @@ $("deptGrid").addEventListener("click", async event => {
   const name = deleteButton.dataset.deleteDept;
   const count = products.filter(product => product.department === name).length;
   if (count) return showToast(`Move or delete the ${count} linked product${count === 1 ? "" : "s"} first.`);
-  if (!confirm(`Delete ${name}?`)) return;
+  if (!confirm(`Delete ${name}? A recovery copy will remain in catalog history.`)) return;
   try {
     await api("departments", {method: "DELETE", query: `name=eq.${encodeURIComponent(name)}`});
     await loadAll();
-    showToast("Department deleted");
+    showToast("Department deleted; recovery history was preserved");
   } catch (error) { showToast(error.message); }
 });
 
@@ -354,13 +453,13 @@ document.addEventListener("keydown", event => {
 async function bootstrap() {
   try {
     await loadPublicConfig();
-    if (sessionStorage.getItem(SESSION_KEY) === "1") showApp();
+    const restored = await restoreAuthSession();
+    if (restored) showApp();
     else showLogin();
   } catch (error) {
+    clearAuthSession();
     showLogin();
-    $("loginError").textContent = error.message;
-    $("loginError").classList.remove("hidden");
-    $("loginForm").querySelector("button").disabled = true;
+    setLoginError(error.message);
   }
 }
 
