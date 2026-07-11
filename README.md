@@ -20,6 +20,6 @@ Responsive electronics and home-appliance catalog with WhatsApp ordering and a S
 3. Enter the admin password: `biriho2026`.
 4. Add, edit or delete products and departments.
 
-Image uploads use ImgBB from the browser. Save a valid ImgBB API key in the product image panel before uploading; if a saved key fails, the admin page clears it and asks for a new one. You can also paste any hosted product image URL manually.
+Image uploads use ImgBB from the browser. Enter a valid ImgBB API key in the product image panel before uploading; the key is used only while the page is open and is not saved in the browser, code, or Git. You can also paste any hosted product image URL manually.
 
 The setup does not drop existing products or departments. The Supabase anon key is used in the browser so the storefront and simple admin can communicate with the database.

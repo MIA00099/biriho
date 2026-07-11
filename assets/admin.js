@@ -3,7 +3,6 @@
 let SUPABASE_URL = "";
 let SUPABASE_ANON_KEY = "";
 const AUTH_SESSION_KEY = "biriho_supabase_admin_auth";
-const IMGBB_KEY_STORAGE = "biriho_imgbb_key";
 const $ = id => document.getElementById(id);
 
 let authSession = null;
@@ -11,6 +10,7 @@ let products = [];
 let departments = [];
 let editingProductId = null;
 let editingDepartmentName = null;
+let imgBbSessionKey = "";
 let toastTimer;
 
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
@@ -34,10 +34,10 @@ function setConnection(state, text) {
 }
 
 function getImgBbKey() {
-  return (localStorage.getItem(IMGBB_KEY_STORAGE) || "").trim();
+  return imgBbSessionKey.trim();
 }
 
-function showImgBbKeyPanel(message = "Save an ImgBB API key before uploading images.") {
+function showImgBbKeyPanel(message = "Enter an ImgBB API key before uploading images.") {
   $("imgbbKeyPanel").classList.remove("hidden");
   $("uploadStatus").textContent = message;
 }
@@ -46,17 +46,17 @@ function hideImgBbKeyPanel() {
   $("imgbbKeyPanel").classList.add("hidden");
 }
 
-function saveImgBbKey() {
+function useImgBbKey() {
   const key = $("imgbbKeyInput").value.trim();
   if (!key) return showImgBbKeyPanel("Paste your ImgBB API key first.");
-  localStorage.setItem(IMGBB_KEY_STORAGE, key);
+  imgBbSessionKey = key;
   $("imgbbKeyInput").value = "";
   hideImgBbKeyPanel();
-  $("uploadStatus").textContent = "ImgBB key saved. Choose an image and press Upload.";
+  $("uploadStatus").textContent = "ImgBB key ready for this page only. Choose an image and press Upload.";
 }
 
-function clearImgBbKey(message = "ImgBB key cleared. Save a new key before uploading images.") {
-  localStorage.removeItem(IMGBB_KEY_STORAGE);
+function clearImgBbKey(message = "ImgBB key cleared. Enter it again before uploading images.") {
+  imgBbSessionKey = "";
   $("imgbbKeyInput").value = "";
   showImgBbKeyPanel(message);
 }
@@ -341,7 +341,7 @@ function openProduct(product = null) {
   $("fImage").value = product?.image || "";
   $("fSpecs").value = toArray(product?.specs).join(", ");
   hideImgBbKeyPanel();
-  $("uploadStatus").textContent = getImgBbKey() ? "You can paste a link or upload an image." : "Paste a link, or save an ImgBB API key before uploading.";
+  $("uploadStatus").textContent = getImgBbKey() ? "You can paste a link or upload an image." : "Paste a link, or enter an ImgBB API key for this page before uploading.";
   setPreview(product?.image);
   $("productModal").classList.remove("hidden");
 }
@@ -367,12 +367,12 @@ $("fImageFile").addEventListener("change", event => {
   const file = event.target.files[0];
   $("uploadStatus").textContent = file ? `${file.name} ready. Press Upload to send it to ImgBB.` : "You can paste a link or upload an image.";
 });
-$("saveImgBbKeyBtn").addEventListener("click", saveImgBbKey);
+$("useImgBbKeyBtn").addEventListener("click", useImgBbKey);
 $("clearImgBbKeyBtn").addEventListener("click", () => clearImgBbKey());
 $("imgbbKeyInput").addEventListener("keydown", event => {
   if (event.key === "Enter") {
     event.preventDefault();
-    saveImgBbKey();
+    useImgBbKey();
   }
 });
 
@@ -408,7 +408,7 @@ $("uploadBtn").addEventListener("click", async () => {
     }
     const message = getImgBbError(data, response);
     if (isImgBbKeyError(message)) {
-      clearImgBbKey(`Upload failed: ${message}. Save a new ImgBB key and upload again.`);
+      clearImgBbKey(`Upload failed: ${message}. Enter a valid ImgBB key and upload again.`);
       return;
     }
     throw new Error(message);
