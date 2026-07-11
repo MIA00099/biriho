@@ -27,7 +27,7 @@
     const image = await loadImage(originalDataUrl);
     const scale = Math.min(1, MAX_DIMENSION / Math.max(image.naturalWidth, image.naturalHeight));
 
-    if (scale === 1 && file.size < 2_500_000) return originalDataUrl;
+    if (scale === 1 && file.size < 2500000) return originalDataUrl;
 
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -71,7 +71,13 @@
       event.preventDefault();
       event.stopImmediatePropagation();
 
-      const file = fileInput.files?.[0];
+      const apiKey = String(window.BIRIHO_IMGBB_API_KEY || "").trim();
+      if (!apiKey || apiKey === "PASTE_YOUR_IMGBB_KEY_HERE") {
+        setStatus("Image upload is not configured.");
+        return;
+      }
+
+      const file = fileInput.files && fileInput.files[0];
       if (!file) {
         setStatus("Choose an image first.");
         return;
@@ -84,18 +90,21 @@
       button.disabled = true;
       try {
         setStatus("Preparing image…");
-        const image = await prepareImage(file);
-        setStatus("Uploading image…");
+        const dataUrl = await prepareImage(file);
+        const base64Image = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+        const form = new FormData();
+        form.append("image", base64Image);
+        form.append("name", file.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "-").slice(0, 80) || "product-image");
 
-        const response = await fetch("/api/upload-image", {
+        setStatus("Uploading image…");
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`, {
           method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({image, name: file.name})
+          body: form
         });
         const data = await response.json().catch(() => ({}));
 
-        if (!response.ok || !data.success || !data.data?.url) {
-          throw new Error(data.message || data.error?.message || "Image upload failed.");
+        if (!response.ok || !data.success || !data.data || !data.data.url) {
+          throw new Error(data.error && data.error.message ? data.error.message : "Image upload failed.");
         }
 
         const url = data.data.display_url || data.data.url;
