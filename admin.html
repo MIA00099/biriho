@@ -118,17 +118,10 @@
               <button id="uploadBtn" class="btn btn-light" type="button">Upload to ImgBB</button>
               <span id="uploadStatus">You can paste a link or upload an image.</span>
             </div>
-            <div id="imgbbKeyPanel" class="imgbb-key-panel full hidden">
-              <div class="imgbb-key-copy">
-                <strong>ImgBB API key required</strong>
-                <p>Enter your ImgBB API key for this page only. It is not saved in the browser, code, or Git. You can still paste an image URL manually.</p>
-                <a href="https://api.imgbb.com/" target="_blank" rel="noopener">Get ImgBB API key</a>
-              </div>
-              <label class="field imgbb-key-field"><span>ImgBB API key</span><input id="imgbbKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="Paste ImgBB API key"></label>
-              <div class="imgbb-key-actions">
-                <button id="useImgBbKeyBtn" class="btn btn-primary btn-small" type="button">Use key</button>
-                <button id="clearImgBbKeyBtn" class="btn btn-light btn-small" type="button">Clear key</button>
-              </div>
+            <div id="imgbbKeyPanel" class="imgbb-key-panel full hidden" style="display:none!important" aria-hidden="true">
+              <label class="field"><span>ImgBB API key</span><input id="imgbbKeyInput" type="password" autocomplete="off"></label>
+              <button id="useImgBbKeyBtn" type="button">Use key</button>
+              <button id="clearImgBbKeyBtn" type="button">Clear key</button>
             </div>
             <div class="preview full"><img id="previewImg" alt="Product preview"><span id="previewEmpty">Image preview</span></div>
             <label class="field full"><span>Specifications *</span><textarea id="fSpecs" required placeholder="e.g. 10 kg capacity, Energy saving, 2-year warranty"></textarea><small>Separate specifications with commas.</small></label>
@@ -166,6 +159,31 @@
   <script src="assets/admin.js"></script>
   <script>
   (function(){
+    var imgBbStorageKey="biriho_imgbb_key";
+    var storedImgBbKey=(localStorage.getItem(imgBbStorageKey)||"").trim();
+    if(storedImgBbKey) imgBbSessionKey=storedImgBbKey;
+
+    showImgBbKeyPanel=function(message){
+      var key=(localStorage.getItem(imgBbStorageKey)||"").trim();
+      if(!key){
+        key=(window.prompt("Enter your ImgBB API key. It will be saved in this browser for future uploads:")||"").trim();
+      }
+      if(key){
+        localStorage.setItem(imgBbStorageKey,key);
+        imgBbSessionKey=key;
+        document.getElementById("uploadStatus").textContent="ImgBB key saved. Uploading image…";
+        window.setTimeout(function(){document.getElementById("uploadBtn").click()},0);
+      }else{
+        document.getElementById("uploadStatus").textContent=message||"ImgBB API key is required before uploading.";
+      }
+    };
+
+    clearImgBbKey=function(message){
+      localStorage.removeItem(imgBbStorageKey);
+      imgBbSessionKey="";
+      document.getElementById("uploadStatus").textContent=message||"ImgBB key cleared.";
+    };
+
     var form=document.getElementById("loginForm");
     var input=document.getElementById("passwordInput");
     var error=document.getElementById("loginError");
@@ -203,6 +221,8 @@
     },true);
 
     window.addEventListener("load",function(){
+      var key=(localStorage.getItem(imgBbStorageKey)||"").trim();
+      if(key) imgBbSessionKey=key;
       if(sessionStorage.getItem(sessionKey)==="1")showApp();
       else showLogin();
     });
