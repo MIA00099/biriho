@@ -1,5 +1,7 @@
 "use strict";
 
+window.BIRIHO_IMGBB_API_KEY = "PASTE_YOUR_IMGBB_KEY_HERE";
+
 (() => {
   const MAX_DIMENSION = 1600;
   const JPEG_QUALITY = 0.86;
