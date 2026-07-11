@@ -11,6 +11,7 @@
   <link rel="shortcut icon" href="/favicon.svg?v=2" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/biriho_shop_logo.png.png">
   <link rel="stylesheet" href="assets/admin.css">
+  <link rel="stylesheet" href="assets/admin-upload.css">
   <script>
   (function(){
     var localHosts={"localhost":true,"127.0.0.1":true,"0.0.0.0":true};
@@ -116,6 +117,18 @@
               <label class="file-picker">Choose image<input id="fImageFile" type="file" accept="image/*"></label>
               <button id="uploadBtn" class="btn btn-light" type="button">Upload to ImgBB</button>
               <span id="uploadStatus">You can paste a link or upload an image.</span>
+            </div>
+            <div id="imgbbKeyPanel" class="imgbb-key-panel full hidden">
+              <div class="imgbb-key-copy">
+                <strong>ImgBB API key required</strong>
+                <p>Save your ImgBB API key once in this browser, then upload product photos. You can still paste an image URL manually.</p>
+                <a href="https://api.imgbb.com/" target="_blank" rel="noopener">Get ImgBB API key</a>
+              </div>
+              <label class="field imgbb-key-field"><span>ImgBB API key</span><input id="imgbbKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="Paste ImgBB API key"></label>
+              <div class="imgbb-key-actions">
+                <button id="saveImgBbKeyBtn" class="btn btn-primary btn-small" type="button">Save key</button>
+                <button id="clearImgBbKeyBtn" class="btn btn-light btn-small" type="button">Clear key</button>
+              </div>
             </div>
             <div class="preview full"><img id="previewImg" alt="Product preview"><span id="previewEmpty">Image preview</span></div>
             <label class="field full"><span>Specifications *</span><textarea id="fSpecs" required placeholder="e.g. 10 kg capacity, Energy saving, 2-year warranty"></textarea><small>Separate specifications with commas.</small></label>
