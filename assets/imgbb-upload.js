@@ -1,6 +1,6 @@
 "use strict";
 
-window.BIRIHO_IMGBB_API_KEY = "PASTE_YOUR_IMGBB_KEY_HERE";
+window.BIRIHO_IMGBB_API_KEY = "8b4bdc7649720f7542d40df76a8ceae1";
 
 (() => {
   const MAX_DIMENSION = 1600;
