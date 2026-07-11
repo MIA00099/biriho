@@ -3,6 +3,7 @@
 let SUPABASE_URL = "";
 let SUPABASE_ANON_KEY = "";
 const AUTH_SESSION_KEY = "biriho_supabase_admin_auth";
+const IMGBB_KEY_STORAGE = "biriho_imgbb_key";
 const $ = id => document.getElementById(id);
 
 let authSession = null;
@@ -30,6 +31,35 @@ function showToast(message) {
 function setConnection(state, text) {
   $("connDot").className = state || "";
   $("connText").textContent = text;
+}
+
+function getImgBbKey(forcePrompt = false) {
+  const saved = localStorage.getItem(IMGBB_KEY_STORAGE) || "";
+  if (saved && !forcePrompt) return saved;
+  const message = saved
+    ? "The saved ImgBB API key failed. Enter a new ImgBB API key:"
+    : "Enter your ImgBB API key. It will be saved only in this browser:";
+  const key = (prompt(message, forcePrompt ? "" : saved) || "").trim();
+  if (key) localStorage.setItem(IMGBB_KEY_STORAGE, key);
+  return key;
+}
+
+async function readImgBbResponse(response) {
+  const text = await response.text();
+  if (!text) return {};
+  try { return JSON.parse(text); }
+  catch {
+    return {success: false, error: {message: text.slice(0, 180)}};
+  }
+}
+
+function getImgBbError(data, response) {
+  const message = data?.error?.message || data?.error || data?.message || response?.statusText || "Upload failed";
+  return String(message).replace(/^Error:\s*/i, "");
+}
+
+function isImgBbKeyError(message) {
+  return /key|auth|permission|credential|token/i.test(message);
 }
 
 function setLoginError(message) {
@@ -313,28 +343,56 @@ $("cancelProductBtn").addEventListener("click", closeProduct);
 $("productModal").addEventListener("click", event => { if (event.target === $("productModal")) closeProduct(); });
 $("fImage").addEventListener("input", event => setPreview(event.target.value));
 $("previewImg").addEventListener("error", () => setPreview(""));
+$("fImageFile").addEventListener("change", event => {
+  const file = event.target.files[0];
+  $("uploadStatus").textContent = file ? `${file.name} ready. Press Upload to send it to ImgBB.` : "You can paste a link or upload an image.";
+});
 
 $("uploadBtn").addEventListener("click", async () => {
   const file = $("fImageFile").files[0];
   if (!file) return void ($("uploadStatus").textContent = "Choose an image first.");
-  let key = localStorage.getItem("biriho_imgbb_key") || "";
-  if (!key) {
-    key = prompt("Enter your ImgBB API key. It will be saved only in this browser:") || "";
-    if (key) localStorage.setItem("biriho_imgbb_key", key);
-  }
-  if (!key) return void ($("uploadStatus").textContent = "ImgBB API key is required.");
-  $("uploadStatus").textContent = "Uploading…";
+  if (!file.type.startsWith("image/")) return void ($("uploadStatus").textContent = "Choose a valid image file.");
+  const uploadButton = $("uploadBtn");
+  uploadButton.disabled = true;
   try {
-    const form = new FormData();
-    form.append("image", file);
-    const response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(key)}`, {method: "POST", body: form});
-    const data = await response.json();
-    if (!data.success) throw new Error(data.error?.message || "Upload failed");
-    $("fImage").value = data.data.url;
-    setPreview(data.data.url);
-    $("uploadStatus").textContent = "Image uploaded successfully ✓";
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const key = getImgBbKey(attempt > 0);
+      if (!key) {
+        $("uploadStatus").textContent = "ImgBB API key is required.";
+        return;
+      }
+      $("uploadStatus").textContent = attempt ? "Retrying upload with the new ImgBB key..." : "Uploading image to ImgBB...";
+      const form = new FormData();
+      form.append("image", file, file.name);
+      let response;
+      try {
+        response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: {Accept: "application/json"},
+          body: form
+        });
+      } catch {
+        throw new Error("Could not reach ImgBB. Check the internet connection, browser blocker, or hosting firewall.");
+      }
+      const data = await readImgBbResponse(response);
+      if (response.ok && data.success && data.data?.url) {
+        $("fImage").value = data.data.display_url || data.data.url;
+        setPreview($("fImage").value);
+        $("uploadStatus").textContent = "Image uploaded successfully.";
+        return;
+      }
+      const message = getImgBbError(data, response);
+      if (attempt === 0 && isImgBbKeyError(message)) {
+        localStorage.removeItem(IMGBB_KEY_STORAGE);
+        $("uploadStatus").textContent = "ImgBB key failed. Enter a new key to retry.";
+        continue;
+      }
+      throw new Error(message);
+    }
   } catch (error) {
     $("uploadStatus").textContent = `Upload failed: ${error.message}`;
+  } finally {
+    uploadButton.disabled = false;
   }
 });
 
