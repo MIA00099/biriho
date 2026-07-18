@@ -154,7 +154,12 @@
         <div class="product-price${price ? "" : " price-request"}"><span class="product-price-label">Price</span>${price || "Price on request"}</div>
         <div class="specs">${specs.map(spec => `<span>${escapeHtml(spec)}</span>`).join("")}</div>
         ${sizes.length ? `<div class="tv-size"><label>Choose a size</label><select class="size-select">${sizes.map(size => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join("")}</select></div>` : ""}
-        <div class="ask-btn"><button type="button" data-product-id="${escapeHtml(product.id || index)}">Buy on WhatsApp</button></div>
+        <div class="product-actions">
+          <button type="button" data-product-id="${escapeHtml(product.id || index)}">Buy on WhatsApp</button>
+          <button type="button" class="btn-share" data-share-product="${escapeHtml(product.id || index)}" aria-label="Share ${escapeHtml(product.name)}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+        </div>
       </div>
     </article>`;
   }
@@ -207,16 +212,103 @@
     }, 120);
   });
 
-  productGrid.addEventListener("click", event => {
-    const button = event.target.closest("button[data-product-id]");
-    if (!button) return;
-    const product = productsById.get(button.dataset.productId);
-    if (!product) return;
-    const card = button.closest(".product-card");
-    const size = card?.querySelector(".size-select")?.value;
+  function getProductUrl(productId) {
+    return `${window.location.origin}${window.location.pathname}?product=${productId}`;
+  }
+
+  function getShareText(product) {
     const price = formatPrice(product.price);
-    const message = `Hello Biriho Shop, I want to buy ${product.name}${size ? ` in ${size}` : ""}.${price ? ` The listed price is ${price}.` : " Please tell me the price."} Please confirm availability, warranty and delivery information.`;
-    window.open(waLink(message), "_blank", "noopener");
+    const specs = normalizeArray(product.specs).slice(0, 3).join(", ");
+    return `Check out ${product.name} at Biriho Shop!${price ? ` Price: ${price}` : ""}${specs ? ` - ${specs}` : ""}`;
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+  }
+
+  function showShareToast(msg) {
+    const el = document.createElement("div");
+    el.className = "share-toast";
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2200);
+  }
+
+  let shareDialog = null;
+
+  function ensureShareDialog() {
+    if (shareDialog) return shareDialog;
+    shareDialog = document.createElement("div");
+    shareDialog.className = "share-dialog hidden";
+    shareDialog.innerHTML =
+      '<div class="share-dialog-backdrop"></div>' +
+      '<div class="share-dialog-box">' +
+        '<button class="share-dialog-close" type="button" aria-label="Close">&times;</button>' +
+        '<h4>Share this product</h4>' +
+        '<div class="share-options">' +
+          '<button class="share-option" data-share-action="whatsapp"><span class="share-icon">💬</span><span>WhatsApp</span></button>' +
+          '<button class="share-option" data-share-action="copy"><span class="share-icon">🔗</span><span>Copy link</span></button>' +
+          '<button class="share-option" data-share-action="facebook"><span class="share-icon">📘</span><span>Facebook</span></button>' +
+          '<button class="share-option" data-share-action="twitter"><span class="share-icon">🐦</span><span>Twitter / X</span></button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(shareDialog);
+    shareDialog.querySelector(".share-dialog-backdrop").addEventListener("click", () => shareDialog.classList.add("hidden"));
+    shareDialog.querySelector(".share-dialog-close").addEventListener("click", () => shareDialog.classList.add("hidden"));
+    shareDialog.querySelectorAll("[data-share-action]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const action = btn.dataset.shareAction;
+        const product = shareDialog._product;
+        if (!product) return;
+        const url = getProductUrl(product.id);
+        const text = getShareText(product);
+        if (action === "whatsapp") {
+          window.open(waLink(`${text}%0A${url}`), "_blank", "noopener");
+        } else if (action === "copy") {
+          copyToClipboard(url);
+          showShareToast("Link copied!");
+        } else if (action === "facebook") {
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank", "noopener");
+        } else if (action === "twitter") {
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank", "noopener");
+        }
+        shareDialog.classList.add("hidden");
+      });
+    });
+    return shareDialog;
+  }
+
+  function shareProduct(product) {
+    const url = getProductUrl(product.id);
+    const text = getShareText(product);
+    if (navigator.share) {
+      navigator.share({ title: product.name, text, url }).catch(() => {});
+    } else {
+      const dialog = ensureShareDialog();
+      dialog._product = product;
+      dialog.classList.remove("hidden");
+    }
+  }
+
+  productGrid.addEventListener("click", event => {
+    const buyBtn = event.target.closest("button[data-product-id]");
+    if (buyBtn) {
+      const product = productsById.get(buyBtn.dataset.productId);
+      if (!product) return;
+      const card = buyBtn.closest(".product-card");
+      const size = card?.querySelector(".size-select")?.value;
+      const price = formatPrice(product.price);
+      const message = `Hello Biriho Shop, I want to buy ${product.name}${size ? ` in ${size}` : ""}.${price ? ` The listed price is ${price}.` : " Please tell me the price."} Please confirm availability, warranty and delivery information.`;
+      window.open(waLink(message), "_blank", "noopener");
+      return;
+    }
+    const shareBtn = event.target.closest("[data-share-product]");
+    if (shareBtn) {
+      const product = productsById.get(shareBtn.dataset.shareProduct);
+      if (product) shareProduct(product);
+    }
   });
 
   const mobileNavLinks = [...document.querySelectorAll("[data-mobile-nav]")];
@@ -253,6 +345,17 @@
     writeCache();
   }
 
+  function scrollToProductById(productId) {
+    const card = productGrid.querySelector(`[data-product-id="${productId}"]`)?.closest(".product-card");
+    if (card) {
+      setTimeout(() => {
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        card.classList.add("product-highlight");
+        setTimeout(() => card.classList.remove("product-highlight"), 3000);
+      }, 400);
+    }
+  }
+
   async function start() {
     setGeneralWhatsAppLinks();
     const hadCache = readCache();
@@ -267,6 +370,10 @@
         buildDepartmentUI();
       }
     }
+
+    const params = new URLSearchParams(window.location.search);
+    const shareId = params.get("product");
+    if (shareId) scrollToProductById(shareId);
   }
 
   start();
