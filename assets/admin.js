@@ -2,6 +2,7 @@
 
 let SUPABASE_URL = "";
 let SUPABASE_ANON_KEY = "";
+const ADMIN_EMAIL = "miamipost41@gmail.com";
 const AUTH_SESSION_KEY = "biriho_supabase_admin_auth";
 const $ = id => document.getElementById(id);
 
@@ -149,6 +150,7 @@ async function signIn(email, password) {
   });
   if (!session?.access_token || !session?.user?.id) throw new Error("Authentication failed.");
   saveAuthSession(session);
+  return session;
 }
 
 async function refreshAuthSession() {
@@ -462,6 +464,57 @@ $("productList").addEventListener("click", async event => {
   } catch (error) { showToast(error.message); }
 });
 
+async function changePassword(newPassword, token) {
+  return authRequest("user", {
+    method: "PUT",
+    body: {password: newPassword},
+    token
+  });
+}
+
+$("changePasswordBtn").addEventListener("click", () => {
+  $("passwordModal").classList.remove("hidden");
+  $("pCurrent").value = "";
+  $("pNew").value = "";
+  $("pConfirm").value = "";
+  $("pCurrent").focus();
+});
+
+function closePasswordModal() {
+  $("passwordModal").classList.add("hidden");
+}
+
+$("closePasswordBtn").addEventListener("click", closePasswordModal);
+$("cancelPasswordBtn").addEventListener("click", closePasswordModal);
+$("passwordModal").addEventListener("click", event => {
+  if (event.target === $("passwordModal")) closePasswordModal();
+});
+
+$("passwordForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const current = $("pCurrent").value;
+  const newPass = $("pNew").value;
+  const confirm = $("pConfirm").value;
+
+  if (!current) return showToast("Enter your current password.");
+  if (newPass.length < 6) return showToast("New password must be at least 6 characters.");
+  if (newPass !== confirm) return showToast("New passwords do not match.");
+
+  $("savePasswordBtn").disabled = true;
+  try {
+    const session = await signIn(ADMIN_EMAIL, current);
+    await changePassword(newPass, session.access_token);
+    await signIn(ADMIN_EMAIL, newPass);
+    closePasswordModal();
+    showToast("Password changed successfully.");
+  } catch (error) {
+    if (/Invalid login credentials/i.test(error.message)) return showToast("Current password is incorrect.");
+    showToast(`Password change failed: ${error.message}`);
+  } finally {
+    $("savePasswordBtn").disabled = false;
+  }
+});
+
 function openDepartment(department = null) {
   editingDepartmentName = department?.name || null;
   $("deptForm").reset();
@@ -520,19 +573,23 @@ document.addEventListener("keydown", event => {
   if (event.key !== "Escape") return;
   if (!$("productModal").classList.contains("hidden")) closeProduct();
   else if (!$("deptModal").classList.contains("hidden")) closeDepartment();
+  else if (!$("passwordModal").classList.contains("hidden")) closePasswordModal();
 });
 
 async function bootstrap() {
   try {
     await loadPublicConfig();
     const restored = await restoreAuthSession();
-    if (restored) showApp();
-    else showLogin();
+    if (restored) {
+      sessionStorage.setItem("biriho_admin_session", "1");
+      showApp();
+      return;
+    }
   } catch (error) {
     clearAuthSession();
-    showLogin();
-    setLoginError(error.message);
+    sessionStorage.removeItem("biriho_admin_session");
   }
+  if (sessionStorage.getItem("biriho_admin_session") !== "1") showLogin();
 }
 
 bootstrap();
