@@ -346,14 +346,25 @@
   }
 
   function scrollToProductById(productId) {
-    const card = productGrid.querySelector(`[data-product-id="${productId}"]`)?.closest(".product-card");
-    if (card) {
-      setTimeout(() => {
-        card.scrollIntoView({ behavior: "smooth", block: "center" });
-        card.classList.add("product-highlight");
-        setTimeout(() => card.classList.remove("product-highlight"), 3000);
-      }, 400);
+    activeDepartment = "All";
+    buildDepartmentUI();
+    scheduleRender();
+    let attempts = 0;
+    function tryScroll() {
+      const btn = productGrid.querySelector(`[data-product-id="${productId}"]`);
+      if (btn) {
+        const card = btn.closest(".product-card");
+        if (card) {
+          card.scrollIntoView({ behavior: "smooth", block: "center" });
+          card.classList.add("product-highlight");
+          setTimeout(() => card.classList.remove("product-highlight"), 3500);
+          return;
+        }
+      }
+      attempts++;
+      if (attempts < 50) setTimeout(tryScroll, 100);
     }
+    tryScroll();
   }
 
   async function start() {
