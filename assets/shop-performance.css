@@ -270,3 +270,25 @@ a,button,input,select{-webkit-tap-highlight-color:transparent}
 @media (prefers-reduced-motion:reduce){
   .hero-card>img,.search button,.btn,.header-wa,.product-actions button{transition:none!important}
 }
+
+/* Scroll-reveal and premium layout refinements */
+@media (prefers-reduced-motion:no-preference){
+  .motion-ready .hero-content>*{animation:biriho-hero-in .7s both}
+  .motion-ready .hero-content>*:nth-child(2){animation-delay:.10s}
+  .motion-ready .hero-content>*:nth-child(3){animation-delay:.18s}
+  .motion-ready .hero-content>*:nth-child(4){animation-delay:.26s}
+  .motion-ready .reveal-on-scroll{opacity:0;transform:translate3d(0,26px,0);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1)}
+  .motion-ready .reveal-on-scroll.is-visible{opacity:1;transform:none}
+  @keyframes biriho-hero-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+}
+.catalog{padding-top:36px}
+.section-head{margin-bottom:24px}
+.section-head h2{font-size:clamp(2.1rem,4vw,3.3rem)}
+.controls{border-bottom:1px solid var(--line)}
+.product-grid{row-gap:22px}
+.product-card{border-radius:22px}
+.product-photo{aspect-ratio:1.06}
+.product-body{gap:2px}
+.cta{padding-top:24px}
+@media(min-width:1081px){.product-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}}
+@media(max-width:560px){.catalog{padding-top:20px}.controls{border-bottom:0}.product-grid{row-gap:12px}.product-photo{aspect-ratio:1}}
